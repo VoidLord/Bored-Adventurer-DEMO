@@ -45,7 +45,7 @@ void Player::setPos(int x, int y) {
     pos[1] = y;
 }
 
-std::map<std::string, int> Player::getInv() {
+std::map<std::string, unsigned int> Player::getInv() {
     return inventory;
 }
 
@@ -54,5 +54,14 @@ void Player::giveItem(std::string item, int amount) {
         inventory[item] += amount;
     } else {
         inventory.insert({item, amount});
+    }
+}
+
+void Player::delItem(std::string item, int amount) {
+    if (inventory[item] != 0) {
+        inventory[item] -= amount;
+    }
+    if (inventory[item] == 0) {
+        inventory.erase(item);
     }
 }
