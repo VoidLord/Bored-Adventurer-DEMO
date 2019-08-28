@@ -29,7 +29,6 @@
 #define BOX_PAIR    7
 #define HG_PAIR     8
 
-//map
 std::vector<std::string> test1 = {
     "##############",
     "#    ****    #",
@@ -52,6 +51,7 @@ std::vector<std::string> test2 = {
     "#########"
 };
 
+//map
 std::map<std::string, std::vector<std::string>> maps{
     {"test1", test1},
     {"test2", test2}
