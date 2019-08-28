@@ -83,7 +83,7 @@ int main() {
     curs_set(0); //hide the blinking underline
     noecho();
     keypad(stdscr, true);
-    if (has_colors() == false) {
+    if (has_colors() == false) { //i wonder what happens if someone runs the program while their terminal doesnt support colors
         endwin();
         std::cout << "ERROR: Colors are not supported in this console/terminal." << std::endl;
         return 0;
@@ -111,7 +111,7 @@ int main() {
     spawnPlayer(player, currentMap, 1, 1);
     int mode; //1=move, 2=inv
     int input;
-    bool highlight = false;
+    bool highlight = false; //to highlight items in inventory mode
     unsigned short int hgNum = 0;
     mode = 1;
     player.giveItem("Iron_Sword", 1);
@@ -209,6 +209,7 @@ void printGame(WINDOW* window, Player& plyr, std::vector<std::string>& cMap) {
     }
 }
 
+//print all the stuff to info window
 void printInfo(WINDOW* window, Player& plyr) {
     std::string name = plyr.getName();
     int health = plyr.getHealth();
@@ -234,12 +235,14 @@ void printInfo(WINDOW* window, Player& plyr) {
     wattroff(window, COLOR_PAIR(INFO_PAIR));
 }
 
+//print stuff to log window
 void printLog(WINDOW* window, std::vector<std::string> logs) {
     for (unsigned int i = 0; i < logs.size(); i++) {
         mvwprintw(window, i + 1, 1, logs[i].c_str());
     }
 }
 
+//add stuff to log window
 void addLog(std::vector<std::string>& logs, std::string message) {
     for (unsigned int i = 0; i < logs.size()-1; i++) {
         logs[i] = logs[i+1];
@@ -247,6 +250,7 @@ void addLog(std::vector<std::string>& logs, std::string message) {
     logs[5] = message;
 }
 
+//print stuff to inventory window
 void printInv(WINDOW* window, Player& plyr, bool highlight, unsigned short int& hgNum) {
     std::map<std::string, unsigned int> inventory = plyr.getInv();
     std::vector<std::string> v;
@@ -277,6 +281,7 @@ void printInv(WINDOW* window, Player& plyr, bool highlight, unsigned short int& 
     }
 }
 
+//get the name of the highlighted item in inventory
 std::string getHG(WINDOW* window, Player& plyr, unsigned short int& hgNum) {
     std::map<std::string, unsigned int> inventory = plyr.getInv();
     std::string highlighted;
