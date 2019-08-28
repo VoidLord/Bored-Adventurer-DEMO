@@ -11,6 +11,7 @@ private:
     std::string m_name;
     int m_health;
     int m_gold;
+    std::string equippedWeapon;
     int pos[2] = {0,0};
     std::map<std::string, unsigned int> inventory;
 public:
@@ -21,9 +22,12 @@ public:
     std::string getName();
     int getHealth();
     int getGold();
+    std::string getWeapon();
     void giveGold(int amount);
+    void Heal(int amount);
     std::map<std::string, unsigned int> getInv();
     void giveItem(std::string item, int amount);
+    void useItem(std::string item);
     void delItem(std::string item, int amount);
 };
 

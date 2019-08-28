@@ -24,6 +24,13 @@ void Player::giveGold(int amount) {
     m_gold += amount;
 }
 
+void Player::Heal(int amount) {
+    m_health += amount;
+    if (m_health > 100) {
+        m_health -= m_health % 100;
+    }
+}
+
 std::string Player::getName() {
     return m_name;
 }
@@ -34,6 +41,10 @@ int Player::getHealth() {
 
 int Player::getGold() {
     return m_gold;
+}
+
+std::string Player::getWeapon() {
+    return equippedWeapon;
 }
 
 int* Player::getPos() {
@@ -57,8 +68,21 @@ void Player::giveItem(std::string item, int amount) {
     }
 }
 
+void Player::useItem(std::string item) {
+    if (equippedWeapon == item) {
+        equippedWeapon = "";
+    } else if (item == "Iron_Sword") {
+        equippedWeapon = item;
+    } else if (item == "Health_Potion") {
+        if (m_health != 100) {
+            Heal(25);
+            delItem(item, 1);
+        }
+    }
+}
+
 void Player::delItem(std::string item, int amount) {
-    if (inventory[item] != 0) {
+    if (inventory[item] != 0 && item != equippedWeapon) {
         inventory[item] -= amount;
     }
     if (inventory[item] == 0) {

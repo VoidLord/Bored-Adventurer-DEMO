@@ -106,7 +106,7 @@ int main() {
     for (unsigned int i = 0; i < 6; i++) {
         logs.push_back("");
     }
-    Player player("void", 100, 0);
+    Player player("void", 70, 0);
     int* pPos = player.getPos();
     spawnPlayer(player, currentMap, 1, 1);
     int mode; //1=move, 2=inv
@@ -115,9 +115,7 @@ int main() {
     unsigned short int hgNum = 0;
     mode = 1;
     player.giveItem("Iron_Sword", 1);
-    player.giveItem("Health_Potion", 1);
-    player.giveItem("Health_Potion", 4);
-    player.giveItem("Cookie", 8);
+    player.giveItem("Health_Potion", 3);
     do {
         werase(stdscr);
         werase(main);
@@ -162,6 +160,8 @@ int main() {
                 hgNum -= 1;
             } else if (input == KEY_DOWN && hgNum < player.getInv().size() - 1) {
                 hgNum += 1;
+            } else if (input == 'e') {
+                player.useItem(getHG(inv, player, hgNum));
             } else if (input == 'd') {
                 player.delItem(getHG(inv, player, hgNum), 1);
             } else if (input == 'i') {
@@ -265,6 +265,9 @@ void printInv(WINDOW* window, Player& plyr, bool highlight, unsigned short int& 
         mvwprintw(window, i+1, 1, (it->first).c_str());
         wprintw(window, ": ");
         wprintw(window, (std::to_string(temp)).c_str());
+        if (plyr.getWeapon() == it->first) {
+            wprintw(window, " [e]");
+        }
         if (i == hgNum && highlight == true) {
             wattroff(window, COLOR_PAIR(8));
         } else {
