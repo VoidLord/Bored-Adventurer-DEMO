@@ -95,12 +95,15 @@ void Player::giveItem(std::string item, int amount) {
 void Player::useItem(std::string item) {
     if (equippedWeapon == item) {
         equippedWeapon = "";
+        this->addLog(m_name + " unequipped " + item);
     } else if (item == "Iron_Sword") {
         equippedWeapon = item;
+        this->addLog(m_name + " equipped " + item);
     } else if (item == "Health_Potion") {
         if (m_health != 100) {
-            Heal(25);
             delItem(item, 1);
+            this->addLog(m_name + " used " + item);
+            Heal(25);
         }
     }
 }
@@ -108,6 +111,7 @@ void Player::useItem(std::string item) {
 void Player::delItem(std::string item, int amount) {
     if (inventory[item] != 0 && item != equippedWeapon) {
         inventory[item] -= amount;
+        this->addLog(m_name + " deleted 1 " + item);
     }
     if (inventory[item] == 0) {
         inventory.erase(item);

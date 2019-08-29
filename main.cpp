@@ -65,28 +65,15 @@ std::map<std::string, std::vector<std::string>> maps{
 void printGame(WINDOW* window, Player& plyr, std::vector<std::string>& cMap);
 void printInfo(WINDOW* window, Player& plyr);
 void printLog(WINDOW* window, std::vector<std::string> logs);
-void printInv(WINDOW* window, Player& plyr, bool highlight, unsigned short int& hgNum);
-std::string getHG(WINDOW* window, Player& plyr, unsigned short int& hgNum);
+void printInv(WINDOW* window, Player& plyr, bool highlight, unsigned short int& invhgNum);
+std::string getHG(WINDOW* window, Player& plyr, unsigned short int& invhgNum);
 void addLog(std::vector<std::string>& log, std::string message);
 void spawnPlayer(Player& plyr, std::vector<std::string>& cMap);
 
-//here comes the fun
+//here comes the fun part
 int main() {
-    std::vector<std::string> currentMap = maps["test1"];
-    int main_x = currentMap.size() + 2;
-    int main_y = currentMap[0].size() + 2;
-    int info_x = (main_x < 8 ? 8 : main_x);
-    int info_y = 16;
-    int log_x = 8;
-    int log_y = main_y + info_y + 1;
-    int inv_x = main_x + log_x;
-    int inv_y = 22;
+    int input;
     initscr(); //initialize pdcurses
-    resize_term((main_x > info_x ? main_x : info_x) + log_x, main_y + info_y + 3 + inv_y + 1);
-    SetConsoleTitle(TEXT(""));
-    curs_set(0); //hide the blinking underline
-    noecho();
-    keypad(stdscr, true);
     if (has_colors() == false) { //i wonder what happens if someone runs the program while their terminal doesnt support colors
         endwin();
         std::cout << "ERROR: Colors are not supported in this console/terminal." << std::endl;
@@ -103,6 +90,66 @@ int main() {
     init_pair(8, COLOR_BLACK, COLOR_WHITE); //highlight
     init_pair(9, COLOR_BLUE, COLOR_BLACK); //key
     init_pair(10, COLOR_CYAN, COLOR_BLACK); //chest
+    resize_term(16, 24);
+    SetConsoleTitle(TEXT(""));
+    curs_set(0); //hide the blinking underline
+    noecho();
+    keypad(stdscr, true);
+    unsigned int mmhgNum = 0;
+    std::vector<std::string> mmList = {
+        "Play game",
+        "Options",
+        "Exit"
+    };
+    do {
+        werase(stdscr);
+        for (unsigned int i = 0; i < mmList.size(); i++) {
+            if (i == mmhgNum) {
+                mvwprintw(stdscr, 8 + i, 4, ">");
+                wattron(stdscr, COLOR_PAIR(HG_PAIR));
+            } else {
+                wattron(stdscr, COLOR_PAIR(BOX_PAIR));
+            }
+            mvwprintw(stdscr, 8 + i, 6, mmList[i].c_str());
+            if (i == mmhgNum) {
+                wattroff(stdscr, COLOR_PAIR(HG_PAIR));
+            } else {
+                wattroff(stdscr, COLOR_PAIR(BOX_PAIR));
+            }
+        }
+        box(stdscr, 0, 0);
+        wnoutrefresh(stdscr);
+        doupdate();
+        input = wgetch(stdscr);
+        if (input == KEY_UP) {
+            if (mmhgNum != 0) {
+                mmhgNum -= 1;
+            }
+        } else if (input == KEY_DOWN) {
+            if (mmhgNum < mmList.size()-1) {
+                mmhgNum += 1;
+            }
+        } else if (input == KEY_ENTER || input == '\r' || input == '\n') {
+            if (mmhgNum == 0) {
+                //TODO: get info from player, and only then start the game
+                break;
+            } else if (mmhgNum == 1) {
+                //TODO: settings
+            } else if (mmhgNum == 2) {
+                return 0;
+            }
+        }
+    } while (true);
+    std::vector<std::string> currentMap = maps["test1"];
+    int main_x = currentMap.size() + 2;
+    int main_y = currentMap[0].size() + 2;
+    int info_x = (main_x < 8 ? 8 : main_x);
+    int info_y = 16;
+    int log_x = 8;
+    int log_y = main_y + info_y + 1;
+    int inv_x = main_x + log_x;
+    int inv_y = 22;
+    resize_term((main_x > info_x ? main_x : info_x) + log_x, main_y + info_y + 3 + inv_y + 1);
     WINDOW* main = newwin(main_x, main_y, 0, 1);
     WINDOW* info = newwin(info_x, info_y, 0, main_y+2);
     WINDOW* log = newwin(log_x, log_y, (main_x > info_x ? main_x : info_x), 1);
@@ -116,9 +163,8 @@ int main() {
     int* pPos = player.getPos();
     spawnPlayer(player, currentMap);
     int mode; //1=move, 2=inv
-    int input;
     bool highlight = false; //to highlight items in inventory mode
-    unsigned short int hgNum = 0;
+    unsigned short int invhgNum = 0;
     mode = 1;
     do {
         werase(stdscr);
@@ -129,7 +175,7 @@ int main() {
         printGame(main, player, currentMap);
         printInfo(info, player);
         printLog(log, logs);
-        printInv(inv, player, highlight, hgNum);
+        printInv(inv, player, highlight, invhgNum);
         attron(COLOR_PAIR(BOX_PAIR));
         box(main, 0, 0);
         box(info, 0, 0);
@@ -156,18 +202,18 @@ int main() {
                 highlight = true;
                 mode = 2;
             }else if (input == KEY_RESIZE) {
-                resize_term((main_x > info_x ? main_x : info_x) + log_x, main_y + info_y + 3);
+                resize_term((main_x > info_x ? main_x : info_x) + log_x, main_y + info_y + 3 + inv_y + 1);
                 curs_set(0);
             }
         } else if (mode == 2) {
-            if (input == KEY_UP && hgNum > 0) {
-                hgNum -= 1;
-            } else if (input == KEY_DOWN && hgNum < player.getInv().size() - 1) {
-                hgNum += 1;
+            if (input == KEY_UP && invhgNum > 0) {
+                invhgNum -= 1;
+            } else if (input == KEY_DOWN && invhgNum < player.getInv().size() - 1) {
+                invhgNum += 1;
             } else if (input == 'e') {
-                player.useItem(getHG(inv, player, hgNum));
+                player.useItem(getHG(inv, player, invhgNum));
             } else if (input == 'd') {
-                player.delItem(getHG(inv, player, hgNum), 1);
+                player.delItem(getHG(inv, player, invhgNum), 1);
             } else if (input == 'i') {
                 highlight = false;
                 mode = 1;
@@ -261,7 +307,7 @@ void addLog(std::vector<std::string>& logs, std::string message) {
 }
 
 //print stuff to inventory window
-void printInv(WINDOW* window, Player& plyr, bool highlight, unsigned short int& hgNum) {
+void printInv(WINDOW* window, Player& plyr, bool highlight, unsigned short int& invhgNum) {
     std::map<std::string, unsigned int> inventory = plyr.getInv();
     std::vector<std::string> v;
     unsigned int i = 0;
@@ -271,10 +317,10 @@ void printInv(WINDOW* window, Player& plyr, bool highlight, unsigned short int& 
         if (temp <= 0) {
             continue;
         }
-        if (i == hgNum && highlight == true) {
-            wattron(window, COLOR_PAIR(8));
+        if (i == invhgNum && highlight == true) {
+            wattron(window, COLOR_PAIR(HG_PAIR));
         } else {
-            wattron(window, COLOR_PAIR(7));
+            wattron(window, COLOR_PAIR(BOX_PAIR));
         }
         mvwprintw(window, i+1, 1, (it->first).c_str());
         wprintw(window, ": ");
@@ -282,22 +328,22 @@ void printInv(WINDOW* window, Player& plyr, bool highlight, unsigned short int& 
         if (plyr.getWeapon() == it->first) {
             wprintw(window, " [e]");
         }
-        if (i == hgNum && highlight == true) {
-            wattroff(window, COLOR_PAIR(8));
+        if (i == invhgNum && highlight == true) {
+            wattroff(window, COLOR_PAIR(HG_PAIR));
         } else {
-            wattroff(window, COLOR_PAIR(7));
+            wattroff(window, COLOR_PAIR(BOX_PAIR));
         }
         i++;
     }
 }
 
 //get the name of the highlighted item in inventory
-std::string getHG(WINDOW* window, Player& plyr, unsigned short int& hgNum) {
+std::string getHG(WINDOW* window, Player& plyr, unsigned short int& invhgNum) {
     std::map<std::string, unsigned int> inventory = plyr.getInv();
     std::string highlighted;
     unsigned int i = 0;
     for(std::map<std::string, unsigned int>::iterator it = inventory.begin(); it != inventory.end(); it++) {
-        if (i == hgNum) {
+        if (i == invhgNum) {
             highlighted = it->first;
         }
         i++;
