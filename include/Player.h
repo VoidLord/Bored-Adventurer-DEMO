@@ -14,6 +14,7 @@ private:
     std::string equippedWeapon;
     int pos[2] = {0,0};
     std::map<std::string, unsigned int> inventory;
+    std::vector<std::string> logs;
 public:
     Player(const std::string& name, int health = 100, int gold = 0);
     void movePlayer(std::vector<std::string>& cMap, int x, int y);
@@ -26,6 +27,8 @@ public:
     void giveGold(int amount);
     void Heal(int amount);
     std::map<std::string, unsigned int> getInv();
+    std::vector<std::string>& getLogs();
+    void addLog(std::string message);
     void giveItem(std::string item, int amount);
     void useItem(std::string item);
     void delItem(std::string item, int amount);

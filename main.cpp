@@ -18,6 +18,8 @@
 #define WALL    '#'
 #define PLAYER  '@'
 #define IGOLD   '*'
+#define KEY     'k'
+#define CHEST   'c'
 
 //define color pair numbers, for easy usage
 #define EMPTY_PAIR  1
@@ -28,15 +30,17 @@
 #define INFO_PAIR   6
 #define BOX_PAIR    7
 #define HG_PAIR     8
+#define KEY_PAIR    9
+#define CHEST_PAIR  10
 
 std::vector<std::string> test1 = {
     "##############",
-    "#    ****    #",
+    "#@   ****    #",
     "#   ###      #",
     "# * # ####   #",
-    "# *      #   #",
+    "# *     k#   #",
     "##########   #",
-    "#            #",
+    "#          c #",
     "############ #",
     "#            #",
     "##############"
@@ -46,7 +50,7 @@ std::vector<std::string> test2 = {
     "#########",
     "#   #   #",
     "#   #   #",
-    "#       #",
+    "# @     #",
     "#   #   #",
     "#########"
 };
@@ -64,14 +68,14 @@ void printLog(WINDOW* window, std::vector<std::string> logs);
 void printInv(WINDOW* window, Player& plyr, bool highlight, unsigned short int& hgNum);
 std::string getHG(WINDOW* window, Player& plyr, unsigned short int& hgNum);
 void addLog(std::vector<std::string>& log, std::string message);
-void spawnPlayer(Player& plyr, std::vector<std::string>& cMap, int x, int y);
+void spawnPlayer(Player& plyr, std::vector<std::string>& cMap);
 
 //here comes the fun
 int main() {
     std::vector<std::string> currentMap = maps["test1"];
     int main_x = currentMap.size() + 2;
     int main_y = currentMap[0].size() + 2;
-    int info_x = 12;
+    int info_x = (main_x < 8 ? 8 : main_x);
     int info_y = 16;
     int log_x = 8;
     int log_y = main_y + info_y + 1;
@@ -97,25 +101,25 @@ int main() {
     init_pair(6, COLOR_YELLOW, COLOR_BLACK); //info
     init_pair(7, COLOR_WHITE, COLOR_BLACK); //box
     init_pair(8, COLOR_BLACK, COLOR_WHITE); //highlight
+    init_pair(9, COLOR_BLUE, COLOR_BLACK); //key
+    init_pair(10, COLOR_CYAN, COLOR_BLACK); //chest
     WINDOW* main = newwin(main_x, main_y, 0, 1);
     WINDOW* info = newwin(info_x, info_y, 0, main_y+2);
     WINDOW* log = newwin(log_x, log_y, (main_x > info_x ? main_x : info_x), 1);
     WINDOW* inv = newwin(inv_x, inv_y, 0, main_y + info_y+3);
     //setup player information
-    std::vector<std::string> logs;
+    Player player("void", 70, 0);
+    std::vector<std::string>& logs = player.getLogs();
     for (unsigned int i = 0; i < 6; i++) {
         logs.push_back("");
     }
-    Player player("void", 70, 0);
     int* pPos = player.getPos();
-    spawnPlayer(player, currentMap, 1, 1);
+    spawnPlayer(player, currentMap);
     int mode; //1=move, 2=inv
     int input;
     bool highlight = false; //to highlight items in inventory mode
     unsigned short int hgNum = 0;
     mode = 1;
-    player.giveItem("Iron_Sword", 1);
-    player.giveItem("Health_Potion", 3);
     do {
         werase(stdscr);
         werase(main);
@@ -181,28 +185,34 @@ void printGame(WINDOW* window, Player& plyr, std::vector<std::string>& cMap) {
         for (unsigned int j = 0; j < cMap[i].size(); j++) {
             //some weird way to convert char into C-type string
             char chr = cMap[i][j];
-            std::string str;
-            str.push_back(chr);
             if (chr == PLAYER) {            //if its a player
                 wattron(window, COLOR_PAIR(PLAYER_PAIR));
-                mvwprintw(window, i + 1, j + 1, str.c_str());
+                mvwaddch(window, i + 1, j + 1, chr);
                 wattroff(window, COLOR_PAIR(PLAYER_PAIR));
             } else if (chr == EMPTY) {      //if its empty space
                 wattron(window, COLOR_PAIR(EMPTY_PAIR));
-                mvwprintw(window, i + 1, j + 1, str.c_str());
+                mvwaddch(window, i + 1, j + 1, chr);
                 wattroff(window, COLOR_PAIR(EMPTY_PAIR));
             } else if (chr == WALL) {       //if its a wall
-                wattron(window, A_DIM);
+                //wattron(window, A_BOLD);
                 wattron(window, COLOR_PAIR(WALL_PAIR));
-                mvwprintw(window, i + 1, j + 1, str.c_str());
-                wattroff(window, A_DIM);
+                mvwaddch(window, i + 1, j + 1, ACS_CKBOARD);
+                //wattroff(window, A_BOLD);
                 wattroff(window, COLOR_PAIR(WALL_PAIR));
             } else if (chr == IGOLD) {       //if its item gold
                 wattron(window, COLOR_PAIR(GOLD_PAIR));
-                mvwprintw(window, i + 1, j + 1, str.c_str());
+                mvwaddch(window, i + 1, j + 1, chr);
                 wattroff(window, COLOR_PAIR(GOLD_PAIR));
+            } else if (chr == KEY) {       //if its item gold
+                wattron(window, COLOR_PAIR(KEY_PAIR));
+                mvwaddch(window, i + 1, j + 1, 172);
+                wattroff(window, COLOR_PAIR(KEY_PAIR));
+            } else if (chr == CHEST) {       //if its item gold
+                wattron(window, COLOR_PAIR(CHEST_PAIR));
+                mvwaddch(window, i + 1, j + 1, ACS_PLMINUS);
+                wattroff(window, COLOR_PAIR(CHEST_PAIR));
             } else {                        //if unknown
-                mvwprintw(window, i + 1, j + 1, str.c_str());
+                mvwaddch(window, i + 1, j + 1, chr);
             }
         }
         printw("\n");
@@ -296,9 +306,12 @@ std::string getHG(WINDOW* window, Player& plyr, unsigned short int& hgNum) {
 }
 
 //spawns player
-void spawnPlayer(Player& plyr, std::vector<std::string>& cMap, int x, int y) {
-    if (cMap[x][y] == EMPTY) {
-        cMap[x][y] = PLAYER;
-        plyr.setPos(x, y);
-    } //TODO: make it so it can spawn the player somewhere if path is blocked, maybe a spawn position for each map will do :L
+void spawnPlayer(Player& plyr, std::vector<std::string>& cMap) {
+    for (unsigned int i = 0; i < cMap.size(); i++) {
+        for (unsigned int j = 0; j < cMap[i].size(); j++) {
+            if (cMap[i][j] == PLAYER) {
+                plyr.setPos(i, j);
+            }
+        }
+    }
 }
