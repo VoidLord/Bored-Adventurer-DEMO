@@ -1,6 +1,6 @@
 #include "Player.h"
 
-Player::Player(const std::string& name, int health, int gold):
+Player::Player(const std::string name, int health, int gold):
 m_name(name),
 m_health(health),
 m_gold(gold)
@@ -20,7 +20,7 @@ void Player::movePlayer(std::vector<std::string>& cMap, int x, int y) {
             this->setPos(x, y);
         } else if (cMap[x][y] == 'c') {
             if (inventory.find("Key") != inventory.end()) {
-                this->delItem("Key", 1);
+                this->delItem("Key", 1, false);
                 std::string temp = m_name + " used a Key";
                 this->addLog(temp);
                 this->giveItem("Iron_Sword", 1);
@@ -108,10 +108,12 @@ void Player::useItem(std::string item) {
     }
 }
 
-void Player::delItem(std::string item, int amount) {
+void Player::delItem(std::string item, int amount, bool output) {
     if (inventory[item] != 0 && item != equippedWeapon) {
         inventory[item] -= amount;
-        this->addLog(m_name + " deleted 1 " + item);
+        if (output == true) {
+            this->addLog(m_name + " dropped 1 " + item);
+        }
     }
     if (inventory[item] == 0) {
         inventory.erase(item);

@@ -93,7 +93,6 @@ int main() {
     resize_term(16, 24);
     SetConsoleTitle(TEXT(""));
     curs_set(0); //hide the blinking underline
-    noecho();
     keypad(stdscr, true);
     unsigned int mmhgNum = 0;
     std::vector<std::string> mmList = {
@@ -131,13 +130,26 @@ int main() {
             }
         } else if (input == KEY_ENTER || input == '\r' || input == '\n') {
             if (mmhgNum == 0) {
-                //TODO: get info from player, and only then start the game
                 break;
             } else if (mmhgNum == 1) {
                 //TODO: settings
             } else if (mmhgNum == 2) {
                 return 0;
             }
+        }
+    } while (true);
+    keypad(stdscr, false);
+    curs_set(1);
+    char playerName[] = {};
+    do {
+        werase(stdscr);
+        mvwprintw(stdscr, 8, 2, "Enter a name: ");
+        wprintw(stdscr, playerName);
+        wnoutrefresh(stdscr);
+        doupdate();
+        wgetnstr(stdscr, playerName, 12);
+        if (playerName[0] != '\0') {
+            break;
         }
     } while (true);
     std::vector<std::string> currentMap = maps["test1"];
@@ -154,8 +166,11 @@ int main() {
     WINDOW* info = newwin(info_x, info_y, 0, main_y+2);
     WINDOW* log = newwin(log_x, log_y, (main_x > info_x ? main_x : info_x), 1);
     WINDOW* inv = newwin(inv_x, inv_y, 0, main_y + info_y+3);
+    keypad(stdscr, true);
+    noecho();
+    curs_set(0);
     //setup player information
-    Player player("void", 70, 0);
+    Player player(playerName, 70, 0);
     std::vector<std::string>& logs = player.getLogs();
     for (unsigned int i = 0; i < 6; i++) {
         logs.push_back("");

@@ -16,7 +16,7 @@ private:
     std::map<std::string, unsigned int> inventory;
     std::vector<std::string> logs;
 public:
-    Player(const std::string& name, int health = 100, int gold = 0);
+    Player(const std::string name, int health = 100, int gold = 0);
     void movePlayer(std::vector<std::string>& cMap, int x, int y);
     int* getPos();
     void setPos(int x, int y);
@@ -31,7 +31,7 @@ public:
     void addLog(std::string message);
     void giveItem(std::string item, int amount);
     void useItem(std::string item);
-    void delItem(std::string item, int amount);
+    void delItem(std::string item, int amount, bool output = true);
 };
 
 #endif
