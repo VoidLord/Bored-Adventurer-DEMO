@@ -20,6 +20,8 @@
 #define IGOLD   '*'
 #define KEY     'k'
 #define CHEST   'c'
+#define H_TRAP  'X'
+#define U_TRAP  'x'
 
 //define color pair numbers, for easy usage
 #define EMPTY_PAIR  1
@@ -32,26 +34,26 @@
 #define HG_PAIR     8
 #define KEY_PAIR    9
 #define CHEST_PAIR  10
+#define TRAP_PAIR   11
+#define DEAD_PAIR   12
 
 std::vector<std::string> test1 = {
     "##############",
-    "#@   ****    #",
-    "#   ###      #",
-    "# * # ####   #",
-    "# *     k#   #",
-    "##########   #",
-    "#          c #",
-    "############ #",
+    "#@   ******  #",
     "#            #",
+    "#            #",
+    "#     #    k #",
+    "#     #      #",
+    "#     #    c #",
     "##############"
 };
 
 std::vector<std::string> test2 = {
     "#########",
-    "#   #   #",
-    "#   #   #",
+    "#x  XXXX#",
+    "#       #",
     "# @     #",
-    "#   #   #",
+    "#       #",
     "#########"
 };
 
@@ -62,7 +64,7 @@ std::map<std::string, std::vector<std::string>> maps{
 };
 
 //function prototypes
-void printGame(WINDOW* window, Player& plyr, std::vector<std::string>& cMap);
+void printEntireGame(WINDOW* window, Player& plyr, std::vector<std::string>& cMap);
 void printInfo(WINDOW* window, Player& plyr);
 void printLog(WINDOW* window, std::vector<std::string> logs);
 void printInv(WINDOW* window, Player& plyr, bool highlight, unsigned short int& invhgNum);
@@ -90,10 +92,13 @@ int main() {
     init_pair(8, COLOR_BLACK, COLOR_WHITE); //highlight
     init_pair(9, COLOR_BLUE, COLOR_BLACK); //key
     init_pair(10, COLOR_CYAN, COLOR_BLACK); //chest
+    init_pair(11, COLOR_CYAN, COLOR_BLACK); //trap
+    init_pair(12, COLOR_RED, COLOR_BLACK); //dead
     resize_term(16, 24);
     SetConsoleTitle(TEXT(""));
     curs_set(0); //hide the blinking underline
     keypad(stdscr, true);
+    noecho();
     unsigned int mmhgNum = 0;
     std::vector<std::string> mmList = {
         "Play game",
@@ -104,12 +109,12 @@ int main() {
         werase(stdscr);
         for (unsigned int i = 0; i < mmList.size(); i++) {
             if (i == mmhgNum) {
-                mvwprintw(stdscr, 8 + i, 4, ">");
+                mvwprintw(stdscr, 8 + i, 5, ">");
                 wattron(stdscr, COLOR_PAIR(HG_PAIR));
             } else {
                 wattron(stdscr, COLOR_PAIR(BOX_PAIR));
             }
-            mvwprintw(stdscr, 8 + i, 6, mmList[i].c_str());
+            mvwprintw(stdscr, 8 + i, 7, mmList[i].c_str());
             if (i == mmhgNum) {
                 wattroff(stdscr, COLOR_PAIR(HG_PAIR));
             } else {
@@ -139,12 +144,13 @@ int main() {
         }
     } while (true);
     keypad(stdscr, false);
+    echo();
     curs_set(1);
-    char playerName[] = {};
+    char playerName[] = {""};
     do {
         werase(stdscr);
         mvwprintw(stdscr, 8, 2, "Enter a name: ");
-        wprintw(stdscr, playerName);
+        box(stdscr, 0, 0);
         wnoutrefresh(stdscr);
         doupdate();
         wgetnstr(stdscr, playerName, 12);
@@ -152,7 +158,8 @@ int main() {
             break;
         }
     } while (true);
-    std::vector<std::string> currentMap = maps["test1"];
+    Player player(playerName, "test1", 50, 0); //initialize player
+    std::vector<std::string> currentMap = maps[player.getLoc()];
     int main_x = currentMap.size() + 2;
     int main_y = currentMap[0].size() + 2;
     int info_x = (main_x < 8 ? 8 : main_x);
@@ -169,8 +176,6 @@ int main() {
     keypad(stdscr, true);
     noecho();
     curs_set(0);
-    //setup player information
-    Player player(playerName, 70, 0);
     std::vector<std::string>& logs = player.getLogs();
     for (unsigned int i = 0; i < 6; i++) {
         logs.push_back("");
@@ -187,7 +192,7 @@ int main() {
         werase(info);
         werase(log);
         werase(inv);
-        printGame(main, player, currentMap);
+        printEntireGame(main, player, currentMap);
         printInfo(info, player);
         printLog(log, logs);
         printInv(inv, player, highlight, invhgNum);
@@ -241,15 +246,21 @@ int main() {
 }
 
 //this function prints out the game to the screen
-void printGame(WINDOW* window, Player& plyr, std::vector<std::string>& cMap) {
+void printEntireGame(WINDOW* window, Player& plyr, std::vector<std::string>& cMap) {
     for (unsigned int i = 0; i < cMap.size(); i++) {
         for (unsigned int j = 0; j < cMap[i].size(); j++) {
             //some weird way to convert char into C-type string
             char chr = cMap[i][j];
             if (chr == PLAYER) {            //if its a player
-                wattron(window, COLOR_PAIR(PLAYER_PAIR));
-                mvwaddch(window, i + 1, j + 1, chr);
-                wattroff(window, COLOR_PAIR(PLAYER_PAIR));
+                if (plyr.getHealth() == 0) {
+                    wattron(window, COLOR_PAIR(DEAD_PAIR));
+                    mvwaddch(window, i + 1, j + 1, chr);
+                    wattroff(window, COLOR_PAIR(DEAD_PAIR));
+                } else {
+                    wattron(window, COLOR_PAIR(PLAYER_PAIR));
+                    mvwaddch(window, i + 1, j + 1, chr);
+                    wattroff(window, COLOR_PAIR(PLAYER_PAIR));
+                }
             } else if (chr == EMPTY) {      //if its empty space
                 wattron(window, COLOR_PAIR(EMPTY_PAIR));
                 mvwaddch(window, i + 1, j + 1, chr);
@@ -272,6 +283,14 @@ void printGame(WINDOW* window, Player& plyr, std::vector<std::string>& cMap) {
                 wattron(window, COLOR_PAIR(CHEST_PAIR));
                 mvwaddch(window, i + 1, j + 1, ACS_PLMINUS);
                 wattroff(window, COLOR_PAIR(CHEST_PAIR));
+            } else if (chr == H_TRAP) {       //if its a hidden trap
+                wattron(window, COLOR_PAIR(EMPTY_PAIR));
+                mvwaddch(window, i + 1, j + 1, ' ');
+                wattroff(window, COLOR_PAIR(EMPTY_PAIR));
+            } else if (chr == U_TRAP) {
+                wattron(window, COLOR_PAIR(TRAP_PAIR));
+                mvwaddch(window, i + 1, j + 1, 215);
+                wattroff(window, COLOR_PAIR(TRAP_PAIR));
             } else {                        //if unknown
                 mvwaddch(window, i + 1, j + 1, chr);
             }
@@ -298,11 +317,13 @@ void printInfo(WINDOW* window, Player& plyr) {
     temp = std::to_string(gold);
     mvwprintw(window, 5, 1, temp.c_str());  //gold
     wprintw(window, " g");
+    mvwprintw(window, 6, 1, plyr.getLoc().c_str());
+    wprintw(window, ": ");
     temp = std::to_string(pos[0]);
     temp.push_back(',');
     std::string tempI = std::to_string(pos[1]);
-    mvwprintw(window, 6, 1, temp.c_str());  //pos
-    wprintw(window, tempI.c_str()); //pos
+    wprintw(window, temp.c_str());  //pos1
+    wprintw(window, tempI.c_str()); //pos2
     wattroff(window, COLOR_PAIR(INFO_PAIR));
 }
 
