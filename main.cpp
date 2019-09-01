@@ -137,7 +137,10 @@ int main() {
             if (mmhgNum == 0) {
                 break;
             } else if (mmhgNum == 1) {
-                //TODO: settings
+                /*TODO: settings
+                1: let the player disable colors in settings, the setting be locked if terminal doesnt support colors
+                2: let the players change audio volume (ofc ill have to add audio first)
+                */
             } else if (mmhgNum == 2) {
                 return 0;
             }
@@ -249,7 +252,6 @@ int main() {
 void printEntireGame(WINDOW* window, Player& plyr, std::vector<std::string>& cMap) {
     for (unsigned int i = 0; i < cMap.size(); i++) {
         for (unsigned int j = 0; j < cMap[i].size(); j++) {
-            //some weird way to convert char into C-type string
             char chr = cMap[i][j];
             if (chr == PLAYER) {            //if its a player
                 if (plyr.getHealth() == 0) {
@@ -273,7 +275,7 @@ void printEntireGame(WINDOW* window, Player& plyr, std::vector<std::string>& cMa
                 wattroff(window, COLOR_PAIR(WALL_PAIR));
             } else if (chr == IGOLD) {       //if its item gold
                 wattron(window, COLOR_PAIR(GOLD_PAIR));
-                mvwaddch(window, i + 1, j + 1, chr);
+                mvwaddch(window, i + 1, j + 1, 169);
                 wattroff(window, COLOR_PAIR(GOLD_PAIR));
             } else if (chr == KEY) {       //if its item gold
                 wattron(window, COLOR_PAIR(KEY_PAIR));
