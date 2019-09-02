@@ -205,10 +205,15 @@ int main() {
         box(info, 0, 0);
         box(log, 0, 0);
         box(inv, 0, 0);
-        printEntireGame(main, player, currentMap, changedMap);
         printInfo(info, player);
         printLog(log, logs);
         printInv(inv, player, highlight, invhgNum);
+        wnoutrefresh(main);
+        wnoutrefresh(info);
+        wnoutrefresh(log);
+        wnoutrefresh(inv);
+        doupdate();
+        printEntireGame(main, player, currentMap, changedMap);
         attron(COLOR_PAIR(BOX_PAIR));
         box(main, 0, 0);
         box(info, 0, 0);

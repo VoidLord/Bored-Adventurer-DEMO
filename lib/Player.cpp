@@ -147,7 +147,7 @@ void Player::useItem(std::string item) {
         this->addLog(m_name + " equipped " + item);
     } else if (item == "Health_Potion") {
         if (m_health != 100) {
-            delItem(item, 1);
+            delItem(item, 1, false);
             this->addLog(m_name + " used " + item);
             Heal(25);
         }
