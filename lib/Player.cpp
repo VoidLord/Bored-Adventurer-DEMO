@@ -8,10 +8,10 @@ m_health(health),
 m_gold(gold)
 {}
 
-void Player::movePlayer(std::vector<std::string>& cMap, int x, int y) {
+bool Player::movePlayer(std::vector<std::string>& cMap, int x, int y) {
     int* pPos = this->getPos();
     if (cMap[pPos[0]][pPos[1]] == '@' && m_health != 0) {
-        if (cMap[x][y] != '#' && cMap[x][y] != 'c' && cMap[x][y] != 'X' && cMap[x][y] != 'x') {
+        if (cMap[x][y] != '#' && cMap[x][y] != 'c' && cMap[x][y] != 'X' && cMap[x][y] != 'x' && cMap[x][y] != '^' && cMap[x][y] != 'v') {
             if (cMap[x][y] == '*') {
                 this->giveGold(1);
             } else if (cMap[x][y] == 'k') {
@@ -35,8 +35,19 @@ void Player::movePlayer(std::vector<std::string>& cMap, int x, int y) {
         } else if (cMap[x][y] == 'X') {
             this->Damage(15);
             cMap[x][y] = 'x';
+        } else if (cMap[x][y] == '^') {
+            if (m_currentMap == "test1") {
+                this->changeLoc("test2");
+                return true;
+            }
+        } else if (cMap[x][y] == 'v') {
+            if (m_currentMap == "test2") {
+                this->changeLoc("test1");
+                return true;
+            }
         }
     }
+    return false;
 }
 
 void Player::giveGold(int amount) {
@@ -93,6 +104,7 @@ std::string Player::getLoc() {
 
 void Player::changeLoc(std::string loc) {
     m_currentMap = loc;
+    this->addLog(m_name + " moved to " + loc);
 }
 
 std::map<std::string, unsigned int> Player::getInv() {
@@ -108,6 +120,12 @@ void Player::addLog(std::string message) {
         m_logs[i] = m_logs[i+1];
     }
     m_logs[5] = message;
+}
+
+void Player::clearLogs() {
+    for (unsigned int i = 0; i < m_logs.size()-1; i++) {
+        m_logs[i] = "";
+    }
 }
 
 void Player::giveItem(std::string item, int amount) {

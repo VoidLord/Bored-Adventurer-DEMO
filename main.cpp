@@ -22,6 +22,8 @@
 #define CHEST   'c'
 #define H_TRAP  'X'
 #define U_TRAP  'x'
+#define U_STAIR '^'
+#define D_STAIR 'v'
 
 //define color pair numbers, for easy usage
 #define EMPTY_PAIR  1
@@ -36,14 +38,14 @@
 #define CHEST_PAIR  10
 #define TRAP_PAIR   11
 #define DEAD_PAIR   12
+#define STAIR_PAIR  13
 
 std::vector<std::string> test1 = {
     "##############",
     "#@   ******  #",
     "#            #",
-    "#            #",
     "#     #    k #",
-    "#     #      #",
+    "#  ^  #      #",
     "#     #    c #",
     "##############"
 };
@@ -52,7 +54,7 @@ std::vector<std::string> test2 = {
     "#########",
     "#x  XXXX#",
     "#       #",
-    "# @     #",
+    "# @  v  #",
     "#       #",
     "#########"
 };
@@ -64,7 +66,7 @@ std::map<std::string, std::vector<std::string>> maps{
 };
 
 //function prototypes
-void printEntireGame(WINDOW* window, Player& plyr, std::vector<std::string>& cMap);
+void printEntireGame(WINDOW* window, Player& plyr, std::vector<std::string>& cMap, bool& delayedPrint);
 void printInfo(WINDOW* window, Player& plyr);
 void printLog(WINDOW* window, std::vector<std::string> logs);
 void printInv(WINDOW* window, Player& plyr, bool highlight, unsigned short int& invhgNum);
@@ -94,6 +96,7 @@ int main() {
     init_pair(10, COLOR_CYAN, COLOR_BLACK); //chest
     init_pair(11, COLOR_CYAN, COLOR_BLACK); //trap
     init_pair(12, COLOR_RED, COLOR_BLACK); //dead
+    init_pair(13, COLOR_CYAN, COLOR_BLACK); //stair
     resize_term(16, 24);
     SetConsoleTitle(TEXT(""));
     curs_set(0); //hide the blinking underline
@@ -183,19 +186,26 @@ int main() {
     for (unsigned int i = 0; i < 6; i++) {
         logs.push_back("");
     }
-    int* pPos = player.getPos();
+    //gameloop
+
     spawnPlayer(player, currentMap);
+    int* pPos = player.getPos();
     int mode; //1=move, 2=inv
     bool highlight = false; //to highlight items in inventory mode
     unsigned short int invhgNum = 0;
     mode = 1;
+    bool changedMap = false;
     do {
         werase(stdscr);
         werase(main);
         werase(info);
         werase(log);
         werase(inv);
-        printEntireGame(main, player, currentMap);
+        box(main, 0, 0);
+        box(info, 0, 0);
+        box(log, 0, 0);
+        box(inv, 0, 0);
+        printEntireGame(main, player, currentMap, changedMap);
         printInfo(info, player);
         printLog(log, logs);
         printInv(inv, player, highlight, invhgNum);
@@ -214,19 +224,40 @@ int main() {
         input = wgetch(stdscr); //get player input
         if (mode == 1) {
             if (input == KEY_LEFT) {
-                player.movePlayer(currentMap, pPos[0], pPos[1]-1);
+                changedMap = player.movePlayer(currentMap, pPos[0], pPos[1]-1);
             } else if (input == KEY_UP) {
-                player.movePlayer(currentMap, pPos[0]-1, pPos[1]);
+                changedMap = player.movePlayer(currentMap, pPos[0]-1, pPos[1]);
             } else if (input == KEY_RIGHT) {
-                player.movePlayer(currentMap, pPos[0], pPos[1]+1);
+                changedMap = player.movePlayer(currentMap, pPos[0], pPos[1]+1);
             } else if (input == KEY_DOWN) {
-                player.movePlayer(currentMap, pPos[0]+1, pPos[1]);
+                changedMap = player.movePlayer(currentMap, pPos[0]+1, pPos[1]);
             } else if (input == 'i') {
                 highlight = true;
                 mode = 2;
-            }else if (input == KEY_RESIZE) {
+            } else if (input == KEY_RESIZE) {
                 resize_term((main_x > info_x ? main_x : info_x) + log_x, main_y + info_y + 3 + inv_y + 1);
                 curs_set(0);
+            }
+            if (changedMap == true) {
+                currentMap = maps[player.getLoc()];
+                int main_x = currentMap.size() + 2;
+                int main_y = currentMap[0].size() + 2;
+                int info_x = (main_x < 8 ? 8 : main_x);
+                int info_y = 16;
+                int log_x = 8;
+                int log_y = main_y + info_y + 1;
+                int inv_x = main_x + log_x;
+                int inv_y = 22;
+                resize_term((main_x > info_x ? main_x : info_x) + log_x, main_y + info_y + 3 + inv_y + 1);
+                resize_window(main, main_x, main_y);
+                mvwin(main, 0, 1);
+                resize_window(info, info_x, info_y);
+                mvwin(info, 0, main_y+2);
+                resize_window(log, log_x, log_y);
+                mvwin(log, (main_x > info_x ? main_x : info_x), 1);
+                resize_window(inv, inv_x, inv_y);
+                mvwin(inv, 0, main_y + info_y+3);
+                spawnPlayer(player, currentMap);
             }
         } else if (mode == 2) {
             if (input == KEY_UP && invhgNum > 0) {
@@ -242,14 +273,18 @@ int main() {
                 mode = 1;
             }
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        if (mode == 1) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        } else {
+            std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        }
     } while (true);
     endwin();
     return 0;
 }
 
 //this function prints out the game to the screen
-void printEntireGame(WINDOW* window, Player& plyr, std::vector<std::string>& cMap) {
+void printEntireGame(WINDOW* window, Player& plyr, std::vector<std::string>& cMap, bool& delayedPrint) {
     for (unsigned int i = 0; i < cMap.size(); i++) {
         for (unsigned int j = 0; j < cMap[i].size(); j++) {
             char chr = cMap[i][j];
@@ -293,11 +328,27 @@ void printEntireGame(WINDOW* window, Player& plyr, std::vector<std::string>& cMa
                 wattron(window, COLOR_PAIR(TRAP_PAIR));
                 mvwaddch(window, i + 1, j + 1, 215);
                 wattroff(window, COLOR_PAIR(TRAP_PAIR));
+            } else if (chr == U_STAIR) {
+                wattron(window, COLOR_PAIR(STAIR_PAIR));
+                mvwaddch(window, i + 1, j + 1, chr);
+                wattroff(window, COLOR_PAIR(STAIR_PAIR));
+            } else if (chr == D_STAIR) {
+                wattron(window, COLOR_PAIR(STAIR_PAIR));
+                mvwaddch(window, i + 1, j + 1, chr);
+                wattroff(window, COLOR_PAIR(STAIR_PAIR));
             } else {                        //if unknown
                 mvwaddch(window, i + 1, j + 1, chr);
             }
+            if (delayedPrint == true) {
+                Sleep(10);
+                wnoutrefresh(window);
+                doupdate();
+            }
         }
         printw("\n");
+    }
+    if (delayedPrint == true) {
+        delayedPrint = false;
     }
 }
 

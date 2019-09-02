@@ -18,7 +18,7 @@ private:
     std::vector<std::string> m_logs;
 public:
     Player(const std::string name, std::string startLoc, int health = 100, int gold = 0);
-    void movePlayer(std::vector<std::string>& cMap, int x, int y);
+    bool movePlayer(std::vector<std::string>& cMap, int x, int y);
     int* getPos();
     void setPos(int x, int y);
     std::string getLoc();
@@ -33,6 +33,7 @@ public:
     std::map<std::string, unsigned int> getInv();
     std::vector<std::string>& getLogs();
     void addLog(std::string message);
+    void clearLogs();
     void giveItem(std::string item, int amount);
     void useItem(std::string item);
     void delItem(std::string item, int amount, bool output = true);
