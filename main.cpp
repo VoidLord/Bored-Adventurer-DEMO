@@ -1,4 +1,4 @@
-// Console RPG Game
+// Bored Adventurer
 
 //usual including
 #include <iostream>
@@ -61,21 +61,21 @@ std::vector<std::string> test2 = {
     "#########"
 };
 
-std::vector<std::string> start1 = {
-    "tttttttt",
-    "t@t  k t",
-    "t   tttt",
-    "t t    t",
-    "ttttt  t",
-    "t c    t",
-    "tttttttt"
+std::vector<std::string> start = {
+    "ttttttttttttttttttt",
+    "t@t  k tt    t    t",
+    "t   tttt   t t  t t",
+    "t t    t t t t t  t",
+    "t ttt  t t     tt t",
+    "t t      t ttt tc t",
+    "ttttttttttttttttttt"
 };
 
 //map
 std::map<std::string, std::vector<std::string>> maps{
     {"test1", test1},
     {"test2", test2},
-    {"start1", start1}
+    {"start", start}
 };
 
 //function prototypes
@@ -117,7 +117,7 @@ int main() {
     curs_set(0); //hide the blinking underline
     keypad(stdscr, true);
     noecho();
-    cbreak();
+    cbreak(); //idk what this does but according to the PDMANUAL, this enabled immediate input instead of buffering
     unsigned int mmhgNum = 0;
     std::vector<std::string> mmList = {
         "Play game",
@@ -168,7 +168,7 @@ int main() {
     keypad(stdscr, false);
     echo();
     curs_set(1);
-    char playerName[] = {""};
+    char playerName[] = {""}; //note: never forget to initialize a C-style string, even if its empty
     do {
         werase(stdscr);
         mvwprintw(stdscr, 8, 5, "Enter a name: ");
@@ -180,8 +180,9 @@ int main() {
             break;
         }
     } while (true);
-    Player player(playerName, "start1", 50, 0); //initialize player
+    Player player(playerName, "start", 50, 0); //initialize player
     std::vector<std::string>* currentMap = &maps[player.getLoc()];
+    //initialize the sizes for all windows
     int main_x = currentMap->size() + 2;
     int main_y = (*currentMap)[0].size() + 2;
     int info_x = (main_x < 8 ? 8 : main_x);
@@ -191,6 +192,7 @@ int main() {
     int inv_x = main_x + log_x;
     int inv_y = 22;
     resize_term((main_x > info_x ? main_x : info_x) + log_x, main_y + info_y + 3 + inv_y + 1);
+    //initialize the main windows
     WINDOW* main = newwin(main_x, main_y, 0, 1);
     WINDOW* info = newwin(info_x, info_y, 0, main_y+2);
     WINDOW* log = newwin(log_x, log_y, (main_x > info_x ? main_x : info_x), 1);
@@ -224,10 +226,9 @@ int main() {
     getch();
     spawnPlayer(player, *currentMap);
     int* pPos = player.getPos();
-    int mode; //1=move, 2=inv
+    int mode = 1; //1=move, 2=inv
     bool highlight = false; //to highlight items in inventory mode
     unsigned short int invhgNum = 0;
-    mode = 1;
     bool changedMap = false;
     do {
         werase(stdscr);
@@ -277,7 +278,7 @@ int main() {
                 resize_term((main_x > info_x ? main_x : info_x) + log_x, main_y + info_y + 3 + inv_y + 1);
                 curs_set(0);
             }
-            if (changedMap == true) {
+            if (changedMap == true) { //if map was changed
                 currentMap = &maps[player.getLoc()];
                 int main_x = currentMap->size() + 2;
                 int main_y = (*currentMap)[0].size() + 2;
@@ -321,13 +322,14 @@ int main() {
         } else {
             std::this_thread::sleep_for(std::chrono::milliseconds(50));
         }
-    } while (player.getWeapon() != "Iron_Sword");
+    } while (player.getWeapon() != "Iron_Sword"); //set a requirement for the starter map
     resize_term((main_x > info_x ? main_x : info_x) + log_x, main_y + info_y + 3 + inv_y + 1);
     werase(stdscr);
     box(stdscr, 0, 0);
     wnoutrefresh(stdscr);
     doupdate();
     getch();
+    //TODO: continue game story here
     endwin();
     return 0;
 }
@@ -411,6 +413,7 @@ void printFovGame (WINDOW* window, Player& plyr, std::vector<std::string> cMap, 
     int* pP = plyr.getPos();
     int x = pP[0];
     int y = pP[1];
+    //first generate a fov map
     for (unsigned int i = 0; i < cMap.size(); i++) {
         std::string temp;
         for (unsigned int j = 0; j < cMap[0].size(); j++) {
@@ -440,6 +443,7 @@ void printFovGame (WINDOW* window, Player& plyr, std::vector<std::string> cMap, 
         }
         fovMap.push_back(temp);
     }
+    //then increase the vision to 2 blocks
     if (cMap[x-1][y] != WALL && cMap[x-1][y] != TREE) {     //above
         fovMap[x-2][y-1] = 'v';
         fovMap[x-2][y] = 'v';
@@ -460,6 +464,7 @@ void printFovGame (WINDOW* window, Player& plyr, std::vector<std::string> cMap, 
         fovMap[x+2][y] = 'v';
         fovMap[x+2][y+1] = 'v';
     }
+    //then print out whatever is visible
     for (unsigned int i = 0; i < cMap.size(); i++) {
         for (unsigned int j = 0; j < cMap[i].size(); j++) {
             char chr = cMap[i][j];
@@ -542,23 +547,23 @@ void printInfo(WINDOW* window, Player& plyr) {
     int* pos = plyr.getPos();
 
     wattron(window, COLOR_PAIR(TITLE_PAIR));
-    mvwprintw(window, 1, 1, "RPG Game");    //title
+    mvwprintw(window, 1, 1, "Bored Adventurer");    //title
     wattroff(window, COLOR_PAIR(TITLE_PAIR));
     wattron(window, COLOR_PAIR(INFO_PAIR));
-    mvwprintw(window, 3, 1, name.c_str());  //name
+    mvwprintw(window, 3, 1, name.c_str());          //name
     std::string temp = std::to_string(health);
-    mvwprintw(window, 4, 1, temp.c_str());  //health
+    mvwprintw(window, 4, 1, temp.c_str());          //health
     wprintw(window, " hp");
     temp = std::to_string(gold);
-    mvwprintw(window, 5, 1, temp.c_str());  //gold
+    mvwprintw(window, 5, 1, temp.c_str());          //gold
     wprintw(window, " g");
     mvwprintw(window, 6, 1, plyr.getLoc().c_str());
     wprintw(window, ": ");
-    temp = std::to_string(pos[0]);
+    temp = std::to_string(pos[0]);                  //pos
     temp.push_back(',');
     std::string tempI = std::to_string(pos[1]);
-    wprintw(window, temp.c_str());  //pos1
-    wprintw(window, tempI.c_str()); //pos2
+    wprintw(window, temp.c_str());                  //pos1
+    wprintw(window, tempI.c_str());                 //pos2
     wattroff(window, COLOR_PAIR(INFO_PAIR));
 }
 

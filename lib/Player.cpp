@@ -24,7 +24,7 @@ bool Player::movePlayer(std::vector<std::string>& cMap, int x, int y) {
             if (m_inventory.find("Key") != m_inventory.end()) {
                 this->delItem("Key", 1, false);
                 this->addLog(m_name + " used a Key");
-                if (m_currentMap == "start1") {
+                if (m_currentMap == "start") {
                     this->giveItem("Iron_Sword", 1);
                     this->addLog("Equip your new sword");
                 } else {
