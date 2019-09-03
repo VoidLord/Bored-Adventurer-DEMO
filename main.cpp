@@ -433,18 +433,6 @@ void printFovGame (WINDOW* window, Player& plyr, std::vector<std::string> cMap, 
         }
         fovMap.push_back(temp);
     }
-    if (cMap[x-1][y-1] != WALL) {   //above-left
-        fovMap[x-2][y-2] = 'v';
-    }
-    if (cMap[x-1][y+1] != WALL) {   //above-right
-        fovMap[x-2][y+2] = 'v';
-    }
-    if (cMap[x+1][y-1] != WALL) {   //under-left
-        fovMap[x+2][y-2] = 'v';
-    }
-    if (cMap[x+1][y+1] != WALL) {   //under-right
-        fovMap[x+2][y+2] = 'v';
-    }
     if (cMap[x-1][y] != WALL) {     //above
         fovMap[x-2][y-1] = 'v';
         fovMap[x-2][y] = 'v';
