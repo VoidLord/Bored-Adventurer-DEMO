@@ -11,7 +11,7 @@ m_gold(gold)
 bool Player::movePlayer(std::vector<std::string>& cMap, int x, int y) {
     int* pPos = this->getPos();
     if (cMap[pPos[0]][pPos[1]] == '@' && m_health != 0) {
-        if (cMap[x][y] != '#' && cMap[x][y] != 'c' && cMap[x][y] != 'X' && cMap[x][y] != 'x' && cMap[x][y] != '^' && cMap[x][y] != 'v') {
+        if (cMap[x][y] != '#' && cMap[x][y] != 't' && cMap[x][y] != 'c' && cMap[x][y] != 'X' && cMap[x][y] != 'x' && cMap[x][y] != '^' && cMap[x][y] != 'v') {
             if (cMap[x][y] == '*') {
                 this->giveGold(1);
             } else if (cMap[x][y] == 'k') {
@@ -24,9 +24,8 @@ bool Player::movePlayer(std::vector<std::string>& cMap, int x, int y) {
             if (m_inventory.find("Key") != m_inventory.end()) {
                 this->delItem("Key", 1, false);
                 this->addLog(m_name + " used a Key");
-                if (m_currentMap == "test1") {
+                if (m_currentMap == "start1") {
                     this->giveItem("Iron_Sword", 1);
-                    this->giveItem("Health_Potion", 3);
                 } else {
                     this->giveGold((rand() % 20 + 20)); //random number between 20-40
                 }

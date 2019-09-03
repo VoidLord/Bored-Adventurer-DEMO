@@ -16,6 +16,7 @@
 //define characters which appear on map, for easy usage
 #define EMPTY   ' '
 #define WALL    '#'
+#define TREE    't'
 #define PLAYER  '@'
 #define IGOLD   '*'
 #define KEY     'k'
@@ -39,6 +40,7 @@
 #define TRAP_PAIR   11
 #define DEAD_PAIR   12
 #define STAIR_PAIR  13
+#define TREE_PAIR   14
 
 std::vector<std::string> test1 = {
     "##############",
@@ -59,14 +61,26 @@ std::vector<std::string> test2 = {
     "#########"
 };
 
+std::vector<std::string> start1 = {
+    "tttttttt",
+    "t@t  k t",
+    "t   tttt",
+    "t t     ",
+    "ttttt  t",
+    "t c    t",
+    "tttttttt"
+};
+
 //map
 std::map<std::string, std::vector<std::string>> maps{
     {"test1", test1},
-    {"test2", test2}
+    {"test2", test2},
+    {"start1", start1}
 };
 
 //function prototypes
 void printEntireGame(WINDOW* window, Player& plyr, std::vector<std::string>& cMap, bool& delayedPrint);
+void printFovGame (WINDOW* window, Player& plyr, std::vector<std::string> cMap, bool& delayedPrint);
 void printInfo(WINDOW* window, Player& plyr);
 void printLog(WINDOW* window, std::vector<std::string> logs);
 void printInv(WINDOW* window, Player& plyr, bool highlight, unsigned short int& invhgNum);
@@ -97,11 +111,13 @@ int main() {
     init_pair(11, COLOR_CYAN, COLOR_BLACK); //trap
     init_pair(12, COLOR_RED, COLOR_BLACK); //dead
     init_pair(13, COLOR_CYAN, COLOR_BLACK); //stair
+    init_pair(14, COLOR_GREEN, COLOR_BLACK); //tree
     resize_term(16, 24);
     SetConsoleTitle(TEXT(""));
     curs_set(0); //hide the blinking underline
     keypad(stdscr, true);
     noecho();
+    cbreak();
     unsigned int mmhgNum = 0;
     std::vector<std::string> mmList = {
         "Play game",
@@ -155,19 +171,19 @@ int main() {
     char playerName[] = {""};
     do {
         werase(stdscr);
-        mvwprintw(stdscr, 8, 2, "Enter a name: ");
+        mvwprintw(stdscr, 8, 5, "Enter a name: ");
         box(stdscr, 0, 0);
         wnoutrefresh(stdscr);
         doupdate();
-        wgetnstr(stdscr, playerName, 12);
+        mvwgetnstr(stdscr, 10, 7, playerName, 12);
         if (playerName[0] != '\0') {
             break;
         }
     } while (true);
     Player player(playerName, "test1", 50, 0); //initialize player
-    std::vector<std::string> currentMap = maps[player.getLoc()];
-    int main_x = currentMap.size() + 2;
-    int main_y = currentMap[0].size() + 2;
+    std::vector<std::string>* currentMap = &maps[player.getLoc()];
+    int main_x = currentMap->size() + 2;
+    int main_y = (*currentMap)[0].size() + 2;
     int info_x = (main_x < 8 ? 8 : main_x);
     int info_y = 16;
     int log_x = 8;
@@ -187,8 +203,25 @@ int main() {
         logs.push_back("");
     }
     //gameloop
-
-    spawnPlayer(player, currentMap);
+    werase(stdscr);
+    box(stdscr, 0, 0);
+    wnoutrefresh(stdscr);
+    doupdate();
+    //std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+    mvprintw(3, 5, "One day our adventurer got bored and");
+    mvprintw(4, 8, "decided to go into the woods...");
+    wnoutrefresh(stdscr);
+    doupdate();
+    //std::this_thread::sleep_for(std::chrono::milliseconds(2500));
+    mvprintw(7, 10, "when he suddenly found a mysterious chest");
+    wnoutrefresh(stdscr);
+    doupdate();
+    //std::this_thread::sleep_for(std::chrono::milliseconds(2500));
+    mvprintw(12, 13, "Press any key to continue");
+    wnoutrefresh(stdscr);
+    doupdate();
+    getch();
+    spawnPlayer(player, *currentMap);
     int* pPos = player.getPos();
     int mode; //1=move, 2=inv
     bool highlight = false; //to highlight items in inventory mode
@@ -213,7 +246,7 @@ int main() {
         wnoutrefresh(log);
         wnoutrefresh(inv);
         doupdate();
-        printEntireGame(main, player, currentMap, changedMap);
+        printFovGame(main, player, *currentMap, changedMap);
         attron(COLOR_PAIR(BOX_PAIR));
         box(main, 0, 0);
         box(info, 0, 0);
@@ -229,13 +262,13 @@ int main() {
         input = wgetch(stdscr); //get player input
         if (mode == 1) {
             if (input == KEY_LEFT) {
-                changedMap = player.movePlayer(currentMap, pPos[0], pPos[1]-1);
+                changedMap = player.movePlayer(*currentMap, pPos[0], pPos[1]-1);
             } else if (input == KEY_UP) {
-                changedMap = player.movePlayer(currentMap, pPos[0]-1, pPos[1]);
+                changedMap = player.movePlayer(*currentMap, pPos[0]-1, pPos[1]);
             } else if (input == KEY_RIGHT) {
-                changedMap = player.movePlayer(currentMap, pPos[0], pPos[1]+1);
+                changedMap = player.movePlayer(*currentMap, pPos[0], pPos[1]+1);
             } else if (input == KEY_DOWN) {
-                changedMap = player.movePlayer(currentMap, pPos[0]+1, pPos[1]);
+                changedMap = player.movePlayer(*currentMap, pPos[0]+1, pPos[1]);
             } else if (input == 'i') {
                 highlight = true;
                 mode = 2;
@@ -244,9 +277,9 @@ int main() {
                 curs_set(0);
             }
             if (changedMap == true) {
-                currentMap = maps[player.getLoc()];
-                int main_x = currentMap.size() + 2;
-                int main_y = currentMap[0].size() + 2;
+                currentMap = &maps[player.getLoc()];
+                int main_x = currentMap->size() + 2;
+                int main_y = (*currentMap)[0].size() + 2;
                 int info_x = (main_x < 8 ? 8 : main_x);
                 int info_y = 16;
                 int log_x = 8;
@@ -262,13 +295,17 @@ int main() {
                 mvwin(log, (main_x > info_x ? main_x : info_x), 1);
                 resize_window(inv, inv_x, inv_y);
                 mvwin(inv, 0, main_y + info_y+3);
-                spawnPlayer(player, currentMap);
+                spawnPlayer(player, *currentMap);
             }
         } else if (mode == 2) {
             if (input == KEY_UP && invhgNum > 0) {
                 invhgNum -= 1;
+            } else if (input == KEY_UP && invhgNum == 0) {
+                invhgNum = player.getInv().size() - 1;
             } else if (input == KEY_DOWN && invhgNum < player.getInv().size() - 1) {
                 invhgNum += 1;
+            } else if (input == KEY_DOWN && invhgNum == player.getInv().size() - 1) {
+                invhgNum = 0;
             } else if (input == 'e') {
                 player.useItem(getHG(inv, player, invhgNum));
             } else if (input == 'd') {
@@ -281,14 +318,14 @@ int main() {
         if (mode == 1) {
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
         } else {
-            std::this_thread::sleep_for(std::chrono::milliseconds(20));
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
         }
     } while (true);
     endwin();
     return 0;
 }
 
-//this function prints out the game to the screen
+//this function prints out the *entire* game to the screen
 void printEntireGame(WINDOW* window, Player& plyr, std::vector<std::string>& cMap, bool& delayedPrint) {
     for (unsigned int i = 0; i < cMap.size(); i++) {
         for (unsigned int j = 0; j < cMap[i].size(); j++) {
@@ -308,11 +345,15 @@ void printEntireGame(WINDOW* window, Player& plyr, std::vector<std::string>& cMa
                 mvwaddch(window, i + 1, j + 1, chr);
                 wattroff(window, COLOR_PAIR(EMPTY_PAIR));
             } else if (chr == WALL) {       //if its a wall
-                //wattron(window, A_BOLD);
                 wattron(window, COLOR_PAIR(WALL_PAIR));
                 mvwaddch(window, i + 1, j + 1, ACS_CKBOARD);
-                //wattroff(window, A_BOLD);
                 wattroff(window, COLOR_PAIR(WALL_PAIR));
+            } else if (chr == TREE) {       //if its a tree
+                wattron(window, A_DIM);
+                wattron(window, COLOR_PAIR(TREE_PAIR));
+                mvwaddch(window, i + 1, j + 1, 'Y');
+                wattroff(window, COLOR_PAIR(TREE_PAIR));
+                wattroff(window, A_DIM);
             } else if (chr == IGOLD) {       //if its item gold
                 wattron(window, COLOR_PAIR(GOLD_PAIR));
                 mvwaddch(window, i + 1, j + 1, 169);
@@ -354,6 +395,147 @@ void printEntireGame(WINDOW* window, Player& plyr, std::vector<std::string>& cMa
     }
     if (delayedPrint == true) {
         delayedPrint = false;
+    }
+}
+
+//this function prints the game *visible* to player
+void printFovGame (WINDOW* window, Player& plyr, std::vector<std::string> cMap, bool& delayedPrint) {
+    std::vector<std::string> fovMap;
+    int* pP = plyr.getPos();
+    int x = pP[0];
+    int y = pP[1];
+    for (unsigned int i = 0; i < cMap.size(); i++) {
+        std::string temp;
+        for (unsigned int j = 0; j < cMap[0].size(); j++) {
+            bool visible = false;
+            if ((i == x - 1) && (j == y - 1)) {         //above-left
+                visible = true;
+            } else if ((i == x - 1) && (j == y)) {      //above
+                visible = true;
+            } else if ((i == x - 1) && (j == y + 1)) {  //above-right
+                visible = true;
+            } else if ((i == x) && (j == y - 1)) {      //left
+                visible = true;
+            } else if ((i == x) && (j == y + 1)) {      //right
+                visible = true;
+            } else if ((i == x + 1) && (j == y - 1)) {  //under-left
+                visible = true;
+            } else if ((i == x + 1) && (j == y)) {      //under
+                visible = true;
+            } else if ((i == x + 1) && (j == y + 1)) {  //under-right
+                visible = true;
+            }
+            if (visible == true) {
+                temp.push_back('v');
+            } else if (visible == false) {
+                temp.push_back('i');
+            }
+        }
+        fovMap.push_back(temp);
+    }
+    if (cMap[x-1][y-1] != WALL) {   //above-left
+        fovMap[x-2][y-2] = 'v';
+    }
+    if (cMap[x-1][y+1] != WALL) {   //above-right
+        fovMap[x-2][y+2] = 'v';
+    }
+    if (cMap[x+1][y-1] != WALL) {   //under-left
+        fovMap[x+2][y-2] = 'v';
+    }
+    if (cMap[x+1][y+1] != WALL) {   //under-right
+        fovMap[x+2][y+2] = 'v';
+    }
+    if (cMap[x-1][y] != WALL) {     //above
+        fovMap[x-2][y-1] = 'v';
+        fovMap[x-2][y] = 'v';
+        fovMap[x-2][y+1] = 'v';
+    }
+    if (cMap[x][y-1] != WALL) {     //left
+        fovMap[x-1][y-2] = 'v';
+        fovMap[x][y-2] = 'v';
+        fovMap[x+1][y-2] = 'v';
+    }
+    if (cMap[x][y+1] != WALL) {     //right
+        fovMap[x-1][y+2] = 'v';
+        fovMap[x][y+2] = 'v';
+        fovMap[x+1][y+2] = 'v';
+    }
+    if (cMap[x+1][y] != WALL) {     //under
+        fovMap[x+2][y-1] = 'v';
+        fovMap[x+2][y] = 'v';
+        fovMap[x+2][y+1] = 'v';
+    }
+    for (unsigned int i = 0; i < cMap.size(); i++) {
+        for (unsigned int j = 0; j < cMap[i].size(); j++) {
+            char chr = cMap[i][j];
+            bool visible = false;
+            if (fovMap[i][j] == 'v') {
+                visible = true;
+            } else {
+                visible = false;
+            }
+            if (visible == true || chr == PLAYER) {
+                if (chr == PLAYER) {
+                    if (plyr.getHealth() == 0) {
+                        wattron(window, COLOR_PAIR(DEAD_PAIR));
+                        mvwaddch(window, i + 1, j + 1, chr);
+                        wattroff(window, COLOR_PAIR(DEAD_PAIR));
+                    } else {
+                        wattron(window, COLOR_PAIR(PLAYER_PAIR));
+                        mvwaddch(window, i + 1, j + 1, chr);
+                        wattroff(window, COLOR_PAIR(PLAYER_PAIR));
+                    }
+                } else if (chr == EMPTY) {      //if its empty space
+                    wattron(window, COLOR_PAIR(EMPTY_PAIR));
+                    mvwaddch(window, i + 1, j + 1, chr);
+                    wattroff(window, COLOR_PAIR(EMPTY_PAIR));
+                } else if (chr == WALL) {       //if its a wall
+                    wattron(window, COLOR_PAIR(WALL_PAIR));
+                    mvwaddch(window, i + 1, j + 1, ACS_CKBOARD);
+                    wattroff(window, COLOR_PAIR(WALL_PAIR));
+                } else if (chr == TREE) {       //if its a tree
+                    wattron(window, A_DIM);
+                    wattron(window, COLOR_PAIR(TREE_PAIR));
+                    mvwaddch(window, i + 1, j + 1, 'Y');
+                    wattroff(window, COLOR_PAIR(TREE_PAIR));
+                    wattroff(window, A_DIM);
+                } else if (chr == IGOLD) {      //if its item gold
+                    wattron(window, COLOR_PAIR(GOLD_PAIR));
+                    mvwaddch(window, i + 1, j + 1, 169);
+                    wattroff(window, COLOR_PAIR(GOLD_PAIR));
+                } else if (chr == KEY) {        //if its item gold
+                    wattron(window, COLOR_PAIR(KEY_PAIR));
+                    mvwaddch(window, i + 1, j + 1, 172);
+                    wattroff(window, COLOR_PAIR(KEY_PAIR));
+                } else if (chr == CHEST) {      //if its item gold
+                    wattron(window, COLOR_PAIR(CHEST_PAIR));
+                    mvwaddch(window, i + 1, j + 1, ACS_PLMINUS);
+                    wattroff(window, COLOR_PAIR(CHEST_PAIR));
+                } else if (chr == H_TRAP) {     //if its a hidden trap
+                    wattron(window, COLOR_PAIR(EMPTY_PAIR));
+                    mvwaddch(window, i + 1, j + 1, ' ');
+                    wattroff(window, COLOR_PAIR(EMPTY_PAIR));
+                } else if (chr == U_TRAP) {
+                    wattron(window, COLOR_PAIR(TRAP_PAIR));
+                    mvwaddch(window, i + 1, j + 1, 215);
+                    wattroff(window, COLOR_PAIR(TRAP_PAIR));
+                } else if (chr == U_STAIR) {
+                    wattron(window, COLOR_PAIR(STAIR_PAIR));
+                    mvwaddch(window, i + 1, j + 1, chr);
+                    wattroff(window, COLOR_PAIR(STAIR_PAIR));
+                } else if (chr == D_STAIR) {
+                    wattron(window, COLOR_PAIR(STAIR_PAIR));
+                    mvwaddch(window, i + 1, j + 1, chr);
+                    wattroff(window, COLOR_PAIR(STAIR_PAIR));
+                } else {                        //if unknown
+                    mvwaddch(window, i + 1, j + 1, chr);
+                }
+                continue;
+            } else {
+                mvwaddch(window, i + 1, j + 1, EMPTY);
+            }
+        }
+        printw("\n");
     }
 }
 
