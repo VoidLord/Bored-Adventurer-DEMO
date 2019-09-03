@@ -65,7 +65,7 @@ std::vector<std::string> start1 = {
     "tttttttt",
     "t@t  k t",
     "t   tttt",
-    "t t     ",
+    "t t    t",
     "ttttt  t",
     "t c    t",
     "tttttttt"
@@ -180,7 +180,7 @@ int main() {
             break;
         }
     } while (true);
-    Player player(playerName, "test1", 50, 0); //initialize player
+    Player player(playerName, "start1", 50, 0); //initialize player
     std::vector<std::string>* currentMap = &maps[player.getLoc()];
     int main_x = currentMap->size() + 2;
     int main_y = (*currentMap)[0].size() + 2;
@@ -203,6 +203,7 @@ int main() {
         logs.push_back("");
     }
     //gameloop
+    resize_term((main_x > info_x ? main_x : info_x) + log_x, main_y + info_y + 3 + inv_y + 1);
     werase(stdscr);
     box(stdscr, 0, 0);
     wnoutrefresh(stdscr);
@@ -213,7 +214,7 @@ int main() {
     wnoutrefresh(stdscr);
     doupdate();
     //std::this_thread::sleep_for(std::chrono::milliseconds(2500));
-    mvprintw(7, 10, "when he suddenly found a mysterious chest");
+    mvprintw(7, 7, "when he suddenly found a mysterious chest");
     wnoutrefresh(stdscr);
     doupdate();
     //std::this_thread::sleep_for(std::chrono::milliseconds(2500));
@@ -320,7 +321,13 @@ int main() {
         } else {
             std::this_thread::sleep_for(std::chrono::milliseconds(50));
         }
-    } while (true);
+    } while (player.getWeapon() != "Iron_Sword");
+    resize_term((main_x > info_x ? main_x : info_x) + log_x, main_y + info_y + 3 + inv_y + 1);
+    werase(stdscr);
+    box(stdscr, 0, 0);
+    wnoutrefresh(stdscr);
+    doupdate();
+    getch();
     endwin();
     return 0;
 }
@@ -433,22 +440,22 @@ void printFovGame (WINDOW* window, Player& plyr, std::vector<std::string> cMap, 
         }
         fovMap.push_back(temp);
     }
-    if (cMap[x-1][y] != WALL) {     //above
+    if (cMap[x-1][y] != WALL && cMap[x-1][y] != TREE) {     //above
         fovMap[x-2][y-1] = 'v';
         fovMap[x-2][y] = 'v';
         fovMap[x-2][y+1] = 'v';
     }
-    if (cMap[x][y-1] != WALL) {     //left
+    if (cMap[x][y-1] != WALL && cMap[x][y-1] != TREE) {     //left
         fovMap[x-1][y-2] = 'v';
         fovMap[x][y-2] = 'v';
         fovMap[x+1][y-2] = 'v';
     }
-    if (cMap[x][y+1] != WALL) {     //right
+    if (cMap[x][y+1] != WALL && cMap[x][y+1] != TREE) {     //right
         fovMap[x-1][y+2] = 'v';
         fovMap[x][y+2] = 'v';
         fovMap[x+1][y+2] = 'v';
     }
-    if (cMap[x+1][y] != WALL) {     //under
+    if (cMap[x+1][y] != WALL && cMap[x+1][y] != TREE) {     //under
         fovMap[x+2][y-1] = 'v';
         fovMap[x+2][y] = 'v';
         fovMap[x+2][y+1] = 'v';

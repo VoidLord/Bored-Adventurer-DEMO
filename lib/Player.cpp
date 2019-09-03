@@ -26,6 +26,7 @@ bool Player::movePlayer(std::vector<std::string>& cMap, int x, int y) {
                 this->addLog(m_name + " used a Key");
                 if (m_currentMap == "start1") {
                     this->giveItem("Iron_Sword", 1);
+                    this->addLog("Equip your new sword");
                 } else {
                     this->giveGold((rand() % 20 + 20)); //random number between 20-40
                 }
