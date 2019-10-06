@@ -12,15 +12,15 @@ bool Player::movePlayer(std::vector<std::string>& cMap, int x, int y) {
     int* pPos = this->getPos();
     if (cMap[pPos[0]][pPos[1]] == '@' && m_health != 0) {
         if (cMap[x][y] != '#' && cMap[x][y] != 't' && cMap[x][y] != 'c' && cMap[x][y] != 'X' && cMap[x][y] != 'x' && cMap[x][y] != '^' && cMap[x][y] != 'v') {
-            if (cMap[x][y] == '*') {
+            if (cMap[x][y] == '*') {            //if step on gold
                 this->giveGold(1);
-            } else if (cMap[x][y] == 'k') {
+            } else if (cMap[x][y] == 'k') {     //if step on key
                 this->giveItem("Key", 1);
             }
             cMap[pPos[0]][pPos[1]] = ' ';
             cMap[x][y] = '@';
             this->setPos(x, y);
-        } else if (cMap[x][y] == 'c') { //if step on chest
+        } else if (cMap[x][y] == 'c') {         //if step on chest
             if (m_inventory.find("Key") != m_inventory.end()) {
                 this->delItem("Key", 1, false);
                 this->addLog(m_name + " used a Key");
@@ -32,16 +32,16 @@ bool Player::movePlayer(std::vector<std::string>& cMap, int x, int y) {
                 }
                 cMap[x][y] = ' ';
             }
-        } else if (cMap[x][y] == 'X') {
+        } else if (cMap[x][y] == 'X') {         //if step on trap
             this->Damage(15);
             cMap[x][y] = 'x';
-        } else if (cMap[x][y] == '^') {
+        } else if (cMap[x][y] == '^') {         //if step on stairs
             if (m_currentMap == "test1") {
                 this->changeLoc("test2");
                 return true;
             }
         } else if (cMap[x][y] == 'v') {
-            if (m_currentMap == "test2") {
+            if (m_currentMap == "test2") {      //if step on stairs
                 this->changeLoc("test1");
                 return true;
             }

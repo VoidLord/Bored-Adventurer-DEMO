@@ -92,32 +92,32 @@ void spawnPlayer(Player& plyr, std::vector<std::string>& cMap);
 int main() {
     int input;
     initscr(); //initialize pdcurses
-    if (has_colors() == false) { //i wonder what happens if someone runs the program while their terminal doesnt support colors
+    if (has_colors() == false) { //TODO: connect this to settings once they are added
         endwin();
         std::cout << "ERROR: Colors are not supported in this console/terminal." << std::endl;
         return 0;
     }
     start_color(); //initialize coloring in pdcurses
-    init_pair(1, COLOR_BLACK, COLOR_BLACK); //empty
-    init_pair(2, COLOR_MAGENTA, COLOR_BLACK); //wall
-    init_pair(3, COLOR_WHITE, COLOR_BLACK); //player
-    init_pair(4, COLOR_YELLOW, COLOR_BLACK); //igold
-    init_pair(5, COLOR_CYAN, COLOR_BLACK); //title
-    init_pair(6, COLOR_YELLOW, COLOR_BLACK); //info
-    init_pair(7, COLOR_WHITE, COLOR_BLACK); //box
-    init_pair(8, COLOR_BLACK, COLOR_WHITE); //highlight
-    init_pair(9, COLOR_BLUE, COLOR_BLACK); //key
-    init_pair(10, COLOR_CYAN, COLOR_BLACK); //chest
-    init_pair(11, COLOR_CYAN, COLOR_BLACK); //trap
-    init_pair(12, COLOR_RED, COLOR_BLACK); //dead
-    init_pair(13, COLOR_CYAN, COLOR_BLACK); //stair
-    init_pair(14, COLOR_GREEN, COLOR_BLACK); //tree
+    init_pair(1, COLOR_BLACK, COLOR_BLACK);     //empty
+    init_pair(2, COLOR_MAGENTA, COLOR_BLACK);   //wall
+    init_pair(3, COLOR_WHITE, COLOR_BLACK);     //player
+    init_pair(4, COLOR_YELLOW, COLOR_BLACK);    //igold
+    init_pair(5, COLOR_CYAN, COLOR_BLACK);      //title
+    init_pair(6, COLOR_YELLOW, COLOR_BLACK);    //info
+    init_pair(7, COLOR_WHITE, COLOR_BLACK);     //box
+    init_pair(8, COLOR_BLACK, COLOR_WHITE);     //highlight
+    init_pair(9, COLOR_BLUE, COLOR_BLACK);      //key
+    init_pair(10, COLOR_CYAN, COLOR_BLACK);     //chest
+    init_pair(11, COLOR_CYAN, COLOR_BLACK);     //trap
+    init_pair(12, COLOR_RED, COLOR_BLACK);      //dead
+    init_pair(13, COLOR_CYAN, COLOR_BLACK);     //stair
+    init_pair(14, COLOR_GREEN, COLOR_BLACK);    //tree
     resize_term(16, 24);
     SetConsoleTitle(TEXT(""));
     curs_set(0); //hide the blinking underline
     keypad(stdscr, true);
     noecho();
-    cbreak(); //idk what this does but according to the PDMANUAL, this enabled immediate input instead of buffering
+    cbreak(); //idk what this does but according to the PDMANUAL, this enables immediate input instead of buffering
     unsigned int mmhgNum = 0;
     std::vector<std::string> mmList = {
         "Play game",
@@ -168,7 +168,7 @@ int main() {
     keypad(stdscr, false);
     echo();
     curs_set(1);
-    char playerName[] = {""}; //note: never forget to initialize a C-style string, even if its empty
+    char playerName[] = {""}; //NOTE: never forget to initialize a C-style string, even if its meant to be empty
     do {
         werase(stdscr);
         mvwprintw(stdscr, 8, 5, "Enter a name: ");
@@ -204,7 +204,6 @@ int main() {
     for (unsigned int i = 0; i < 6; i++) {
         logs.push_back("");
     }
-    //gameloop
     resize_term((main_x > info_x ? main_x : info_x) + log_x, main_y + info_y + 3 + inv_y + 1);
     werase(stdscr);
     box(stdscr, 0, 0);
@@ -230,6 +229,7 @@ int main() {
     bool highlight = false; //to highlight items in inventory mode
     unsigned short int invhgNum = 0;
     bool changedMap = false;
+    //TODO: make the gameloop an inline function to save space
     do {
         werase(stdscr);
         werase(main);
@@ -349,52 +349,52 @@ void printEntireGame(WINDOW* window, Player& plyr, std::vector<std::string>& cMa
                     mvwaddch(window, i + 1, j + 1, chr);
                     wattroff(window, COLOR_PAIR(PLAYER_PAIR));
                 }
-            } else if (chr == EMPTY) {      //if its empty space
+            } else if (chr == EMPTY) {          //if its empty space
                 wattron(window, COLOR_PAIR(EMPTY_PAIR));
                 mvwaddch(window, i + 1, j + 1, chr);
                 wattroff(window, COLOR_PAIR(EMPTY_PAIR));
-            } else if (chr == WALL) {       //if its a wall
+            } else if (chr == WALL) {           //if its a wall
                 wattron(window, COLOR_PAIR(WALL_PAIR));
                 mvwaddch(window, i + 1, j + 1, ACS_CKBOARD);
                 wattroff(window, COLOR_PAIR(WALL_PAIR));
-            } else if (chr == TREE) {       //if its a tree
+            } else if (chr == TREE) {           //if its a tree
                 wattron(window, A_DIM);
                 wattron(window, COLOR_PAIR(TREE_PAIR));
                 mvwaddch(window, i + 1, j + 1, 'Y');
                 wattroff(window, COLOR_PAIR(TREE_PAIR));
                 wattroff(window, A_DIM);
-            } else if (chr == IGOLD) {       //if its item gold
+            } else if (chr == IGOLD) {          //if its item gold
                 wattron(window, COLOR_PAIR(GOLD_PAIR));
                 mvwaddch(window, i + 1, j + 1, 169);
                 wattroff(window, COLOR_PAIR(GOLD_PAIR));
-            } else if (chr == KEY) {       //if its item gold
+            } else if (chr == KEY) {            //if its item gold
                 wattron(window, COLOR_PAIR(KEY_PAIR));
                 mvwaddch(window, i + 1, j + 1, 172);
                 wattroff(window, COLOR_PAIR(KEY_PAIR));
-            } else if (chr == CHEST) {       //if its item gold
+            } else if (chr == CHEST) {          //if its item gold
                 wattron(window, COLOR_PAIR(CHEST_PAIR));
                 mvwaddch(window, i + 1, j + 1, ACS_PLMINUS);
                 wattroff(window, COLOR_PAIR(CHEST_PAIR));
-            } else if (chr == H_TRAP) {       //if its a hidden trap
+            } else if (chr == H_TRAP) {         //if its a hidden trap
                 wattron(window, COLOR_PAIR(EMPTY_PAIR));
                 mvwaddch(window, i + 1, j + 1, ' ');
                 wattroff(window, COLOR_PAIR(EMPTY_PAIR));
-            } else if (chr == U_TRAP) {
+            } else if (chr == U_TRAP) {         //if its a visible trap
                 wattron(window, COLOR_PAIR(TRAP_PAIR));
                 mvwaddch(window, i + 1, j + 1, 215);
                 wattroff(window, COLOR_PAIR(TRAP_PAIR));
-            } else if (chr == U_STAIR) {
+            } else if (chr == U_STAIR) {        //if its up-stairs
                 wattron(window, COLOR_PAIR(STAIR_PAIR));
                 mvwaddch(window, i + 1, j + 1, chr);
                 wattroff(window, COLOR_PAIR(STAIR_PAIR));
-            } else if (chr == D_STAIR) {
+            } else if (chr == D_STAIR) {        //if its down-stairs
                 wattron(window, COLOR_PAIR(STAIR_PAIR));
                 mvwaddch(window, i + 1, j + 1, chr);
                 wattroff(window, COLOR_PAIR(STAIR_PAIR));
-            } else {                        //if unknown
+            } else {                            //if unknown
                 mvwaddch(window, i + 1, j + 1, chr);
             }
-            if (delayedPrint == true) {
+            if (delayedPrint == true) {         //delayed print for animated map loading
                 Sleep(10);
                 wnoutrefresh(window);
                 doupdate();
@@ -443,7 +443,7 @@ void printFovGame (WINDOW* window, Player& plyr, std::vector<std::string> cMap, 
         }
         fovMap.push_back(temp);
     }
-    //then increase the vision to 2 blocks
+    //then extend the vision to 2 blocks
     if (cMap[x-1][y] != WALL && cMap[x-1][y] != TREE) {     //above
         fovMap[x-2][y-1] = 'v';
         fovMap[x-2][y] = 'v';
@@ -515,15 +515,15 @@ void printFovGame (WINDOW* window, Player& plyr, std::vector<std::string> cMap, 
                     wattron(window, COLOR_PAIR(EMPTY_PAIR));
                     mvwaddch(window, i + 1, j + 1, ' ');
                     wattroff(window, COLOR_PAIR(EMPTY_PAIR));
-                } else if (chr == U_TRAP) {
+                } else if (chr == U_TRAP) {     //if its a visible trap
                     wattron(window, COLOR_PAIR(TRAP_PAIR));
                     mvwaddch(window, i + 1, j + 1, 215);
                     wattroff(window, COLOR_PAIR(TRAP_PAIR));
-                } else if (chr == U_STAIR) {
+                } else if (chr == U_STAIR) {    //if its up-stairs
                     wattron(window, COLOR_PAIR(STAIR_PAIR));
                     mvwaddch(window, i + 1, j + 1, chr);
                     wattroff(window, COLOR_PAIR(STAIR_PAIR));
-                } else if (chr == D_STAIR) {
+                } else if (chr == D_STAIR) {    //if its down-stairs
                     wattron(window, COLOR_PAIR(STAIR_PAIR));
                     mvwaddch(window, i + 1, j + 1, chr);
                     wattroff(window, COLOR_PAIR(STAIR_PAIR));
