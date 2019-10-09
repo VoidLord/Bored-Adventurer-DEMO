@@ -64,13 +64,13 @@ std::vector<std::string> test2 = {
 };
 
 std::vector<std::string> start = {
-    "tttttttwwtttttttttt",
-    "t@t  c wt    t    t",
-    "t   ttww   t t  t t",
-    "t t    w t t t t  t",
-    "t ttt  w t     tt t",
+    "ttttttttttttttttttt",
+    "t@t  c tt    t    t",
+    "t   tttt   t t  t t",
+    "t t      t t t t  t",
+    "t ttt  t t     tt t",
     "t t      t ttt tk t",
-    "ttttttttwwwwwwwwwtt"
+    "ttttttttttttttttttt"
 };
 
 //map
@@ -89,6 +89,7 @@ void printInv(WINDOW* window, Player& plyr, bool highlight, unsigned short int& 
 std::string getHG(WINDOW* window, Player& plyr, unsigned short int& invhgNum);
 void addLog(std::vector<std::string>& log, std::string message);
 void spawnPlayer(Player& plyr, std::vector<std::string>& cMap);
+void renderScreen(Player& plyr, std::vector<std::string>* currentMap, bool changedMap, bool highlight, unsigned short int& invhgNum, WINDOW* stdscr, WINDOW* main, WINDOW* info, WINDOW* log, WINDOW* inv);
 
 //here comes the fun part
 int main() {
@@ -254,11 +255,8 @@ int main() {
                 int main_x = currentMap->size() + 2;
                 int main_y = (*currentMap)[0].size() + 2;
                 int info_x = (main_x < 8 ? 8 : main_x);
-                int info_y = 16;
-                int log_x = 8;
                 int log_y = main_y + info_y + 1;
                 int inv_x = main_x + log_x;
-                int inv_y = 22;
                 resize_term((main_x > info_x ? main_x : info_x) + log_x, main_y + info_y + 3 + inv_y + 1);
                 resize_window(main, main_x, main_y);
                 mvwin(main, 0, 1);
@@ -294,37 +292,10 @@ int main() {
             std::this_thread::sleep_for(std::chrono::milliseconds(50));
         }
         
-        werase(stdscr);
-        werase(main);
-        werase(info);
-        werase(log);
-        werase(inv);
-        box(main, 0, 0);
-        box(info, 0, 0);
-        box(log, 0, 0);
-        box(inv, 0, 0);
-        printInfo(info, player);
-        printLog(log, logs);
-        printInv(inv, player, highlight, invhgNum);
-        wnoutrefresh(main);
-        wnoutrefresh(info);
-        wnoutrefresh(log);
-        wnoutrefresh(inv);
-        doupdate();
-        printFovGame(main, player, *currentMap, changedMap);
-        attron(COLOR_PAIR(BOX_PAIR));
-        box(main, 0, 0);
-        box(info, 0, 0);
-        box(log, 0, 0);
-        box(inv, 0, 0);
-        attroff(COLOR_PAIR(BOX_PAIR));
-        wnoutrefresh(stdscr);
-        wnoutrefresh(main);
-        wnoutrefresh(info);
-        wnoutrefresh(log);
-        wnoutrefresh(inv);
-        doupdate();
+        renderScreen(player, currentMap, changedMap, highlight, invhgNum, stdscr, main, info, log, inv);
+
     } while (player.getWeapon() != "Iron_Sword"); //set a requirement for the starter map
+    player.changeLoc("forest");
     resize_term((main_x > info_x ? main_x : info_x) + log_x, main_y + info_y + 3 + inv_y + 1);
     werase(stdscr);
     box(stdscr, 0, 0);
@@ -407,9 +378,6 @@ void printEntireGame(WINDOW* window, Player& plyr, std::vector<std::string>& cMa
             }
         }
         printw("\n");
-    }
-    if (delayedPrint == true) {
-        delayedPrint = false;
     }
 }
 
@@ -535,7 +503,7 @@ void printFovGame (WINDOW* window, Player& plyr, std::vector<std::string> cMap, 
                     wattroff(window, COLOR_PAIR(STAIR_PAIR));
                 } else if (chr == WATER) {      //if its water
                     wattron(window, COLOR_PAIR(WATER_PAIR));
-                    mvwaddch(window, i + 1, j + 1, L'≈');
+                    mvwaddch(window, i + 1, j + 1, 'w');
                     wattroff(window, COLOR_PAIR(WATER_PAIR));
                 } else {                        //if unknown
                     mvwaddch(window, i + 1, j + 1, chr);
@@ -567,7 +535,7 @@ void printInfo(WINDOW* window, Player& plyr) {
     temp = std::to_string(gold);
     mvwprintw(window, 5, 1, temp.c_str());          //gold
     wprintw(window, " g");
-    mvwprintw(window, 6, 1, plyr.getLoc().c_str());
+    mvwprintw(window, 6, 1, plyr.getLoc().c_str()); //loc
     wprintw(window, ": ");
     temp = std::to_string(pos[0]);                  //pos
     temp.push_back(',');
@@ -646,4 +614,38 @@ void spawnPlayer(Player& plyr, std::vector<std::string>& cMap) {
             }
         }
     }
+}
+
+void renderScreen(Player& plyr, std::vector<std::string>* currentMap, bool changedMap, bool highlight, unsigned short int& invhgNum, WINDOW* stdscr, WINDOW* main, WINDOW* info, WINDOW* log, WINDOW* inv) {
+    std::vector<std::string>& logs = plyr.getLogs();
+    werase(stdscr);
+    werase(main);
+    werase(info);
+    werase(log);
+    werase(inv);
+    box(main, 0, 0);
+    box(info, 0, 0);
+    box(log, 0, 0);
+    box(inv, 0, 0);
+    printInfo(info, plyr);
+    printLog(log, logs);
+    printInv(inv, plyr, highlight, invhgNum);
+    wnoutrefresh(main);
+    wnoutrefresh(info);
+    wnoutrefresh(log);
+    wnoutrefresh(inv);
+    doupdate();
+    printFovGame(main, plyr, *currentMap, changedMap);
+    attron(COLOR_PAIR(BOX_PAIR));
+    box(main, 0, 0);
+    box(info, 0, 0);
+    box(log, 0, 0);
+    box(inv, 0, 0);
+    attroff(COLOR_PAIR(BOX_PAIR));
+    wnoutrefresh(stdscr);
+    wnoutrefresh(main);
+    wnoutrefresh(info);
+    wnoutrefresh(log);
+    wnoutrefresh(inv);
+    doupdate();
 }
