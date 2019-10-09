@@ -213,16 +213,16 @@ int main() {
     box(stdscr, 0, 0);
     wnoutrefresh(stdscr);
     doupdate();
-    //std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+    //LAST: std::this_thread::sleep_for(std::chrono::milliseconds(1500));
     mvprintw(3, 5, "One day our adventurer got bored and");
     mvprintw(4, 8, "decided to go into the woods...");
     wnoutrefresh(stdscr);
     doupdate();
-    //std::this_thread::sleep_for(std::chrono::milliseconds(2500));
+    //LAST: std::this_thread::sleep_for(std::chrono::milliseconds(2500));
     mvprintw(7, 7, "when he suddenly found a mysterious chest");
     wnoutrefresh(stdscr);
     doupdate();
-    //std::this_thread::sleep_for(std::chrono::milliseconds(2500));
+    //LAST: std::this_thread::sleep_for(std::chrono::milliseconds(2500));
     mvprintw(12, 13, "Press any key to continue");
     wnoutrefresh(stdscr);
     doupdate();
@@ -296,12 +296,6 @@ int main() {
 
     } while (player.getWeapon() != "Iron_Sword"); //set a requirement for the starter map
     player.changeLoc("forest");
-    resize_term((main_x > info_x ? main_x : info_x) + log_x, main_y + info_y + 3 + inv_y + 1);
-    werase(stdscr);
-    box(stdscr, 0, 0);
-    wnoutrefresh(stdscr);
-    doupdate();
-    getch();
     //TODO: continue game story here
     endwin();
     return 0;
@@ -336,6 +330,10 @@ void printEntireGame(WINDOW* window, Player& plyr, std::vector<std::string>& cMa
                 mvwaddch(window, i + 1, j + 1, L'♣');
                 wattroff(window, COLOR_PAIR(TREE_PAIR));
                 wattroff(window, A_DIM);
+            } else if (chr == WATER) {          //if its water
+                wattron(window, COLOR_PAIR(WATER_PAIR));
+                mvwaddch(window, i + 1, j + 1, L'≈');
+                wattroff(window, COLOR_PAIR(WATER_PAIR));
             } else if (chr == IGOLD) {          //if its item gold
                 wattron(window, COLOR_PAIR(GOLD_PAIR));
                 mvwaddch(window, i + 1, j + 1, L'©');
@@ -364,10 +362,6 @@ void printEntireGame(WINDOW* window, Player& plyr, std::vector<std::string>& cMa
                 wattron(window, COLOR_PAIR(STAIR_PAIR));
                 mvwaddch(window, i + 1, j + 1, L'▼');
                 wattroff(window, COLOR_PAIR(STAIR_PAIR));
-            } else if (chr == WATER) {          //if its water
-                wattron(window, COLOR_PAIR(WATER_PAIR));
-                mvwaddch(window, i + 1, j + 1, L'≈');
-                wattroff(window, COLOR_PAIR(WATER_PAIR));
             } else {                            //if unknown
                 mvwaddch(window, i + 1, j + 1, chr);
             }
@@ -409,6 +403,7 @@ void printFovGame (WINDOW* window, Player& plyr, std::vector<std::string> cMap, 
             } else if ((i == x + 1) && (j == y + 1)) {  //under-right
                 visible = true;
             }
+
             if (visible == true) {
                 temp.push_back('v');
             } else if (visible == false) {
@@ -443,11 +438,13 @@ void printFovGame (WINDOW* window, Player& plyr, std::vector<std::string> cMap, 
         for (unsigned int j = 0; j < cMap[i].size(); j++) {
             char chr = cMap[i][j];
             bool visible = false;
+
             if (fovMap[i][j] == 'v') {
                 visible = true;
             } else {
                 visible = false;
             }
+
             if (visible == true || chr == PLAYER) {
                 if (chr == PLAYER) {
                     if (plyr.getHealth() == 0) {
@@ -473,6 +470,10 @@ void printFovGame (WINDOW* window, Player& plyr, std::vector<std::string> cMap, 
                     mvwaddch(window, i + 1, j + 1, L'♣');
                     wattroff(window, COLOR_PAIR(TREE_PAIR));
                     wattroff(window, A_DIM);
+                } else if (chr == WATER) {      //if its water
+                    wattron(window, COLOR_PAIR(WATER_PAIR));
+                    mvwaddch(window, i + 1, j + 1, L'≈');
+                    wattroff(window, COLOR_PAIR(WATER_PAIR));
                 } else if (chr == IGOLD) {      //if its item gold
                     wattron(window, COLOR_PAIR(GOLD_PAIR));
                     mvwaddch(window, i + 1, j + 1, L'©');
@@ -501,10 +502,6 @@ void printFovGame (WINDOW* window, Player& plyr, std::vector<std::string> cMap, 
                     wattron(window, COLOR_PAIR(STAIR_PAIR));
                     mvwaddch(window, i + 1, j + 1, L'▼');
                     wattroff(window, COLOR_PAIR(STAIR_PAIR));
-                } else if (chr == WATER) {      //if its water
-                    wattron(window, COLOR_PAIR(WATER_PAIR));
-                    mvwaddch(window, i + 1, j + 1, 'w');
-                    wattroff(window, COLOR_PAIR(WATER_PAIR));
                 } else {                        //if unknown
                     mvwaddch(window, i + 1, j + 1, chr);
                 }
@@ -605,7 +602,7 @@ std::string getHG(WINDOW* window, Player& plyr, unsigned short int& invhgNum) {
     return highlighted;
 }
 
-//spawns player
+//spawn player
 void spawnPlayer(Player& plyr, std::vector<std::string>& cMap) {
     for (unsigned int i = 0; i < cMap.size(); i++) {
         for (unsigned int j = 0; j < cMap[i].size(); j++) {
@@ -616,6 +613,7 @@ void spawnPlayer(Player& plyr, std::vector<std::string>& cMap) {
     }
 }
 
+//render screen
 void renderScreen(Player& plyr, std::vector<std::string>* currentMap, bool changedMap, bool highlight, unsigned short int& invhgNum, WINDOW* stdscr, WINDOW* main, WINDOW* info, WINDOW* log, WINDOW* inv) {
     std::vector<std::string>& logs = plyr.getLogs();
     werase(stdscr);
