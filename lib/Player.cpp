@@ -11,7 +11,7 @@ m_gold(gold)
 bool Player::movePlayer(std::vector<std::string>& cMap, int x, int y) {
     int* pPos = this->getPos();
     if (cMap[pPos[0]][pPos[1]] == '@' && m_health != 0) {
-        if (cMap[x][y] != '#' && cMap[x][y] != 't' && cMap[x][y] != 'c' && cMap[x][y] != 'X' && cMap[x][y] != 'x' && cMap[x][y] != '^' && cMap[x][y] != 'v') {
+        if (cMap[x][y] != '#' && cMap[x][y] != 't' && cMap[x][y] != 'w' && cMap[x][y] != 'c' && cMap[x][y] != 'X' && cMap[x][y] != 'x' && cMap[x][y] != '^' && cMap[x][y] != 'v') {
             if (cMap[x][y] == '*') {            //if step on gold
                 this->giveGold(1);
             } else if (cMap[x][y] == 'k') {     //if step on key
@@ -32,9 +32,9 @@ bool Player::movePlayer(std::vector<std::string>& cMap, int x, int y) {
                 }
                 cMap[x][y] = ' ';
             }
-        } else if (cMap[x][y] == 'X') {         //if step on trap
+        } else if (cMap[x][y] == 'x') {         //if step on trap
             this->Damage(15);
-            cMap[x][y] = 'x';
+            cMap[x][y] = 'X';
         } else if (cMap[x][y] == '^') {         //if step on stairs
             if (m_currentMap == "test1") {
                 this->changeLoc("test2");
