@@ -229,39 +229,7 @@ int main() {
     bool highlight = false; //to highlight items in inventory mode
     unsigned short int invhgNum = 0;
     bool changedMap = false;
-    //TODO: make the gameloop an inline function to save space
-    do {
-        werase(stdscr);
-        werase(main);
-        werase(info);
-        werase(log);
-        werase(inv);
-        box(main, 0, 0);
-        box(info, 0, 0);
-        box(log, 0, 0);
-        box(inv, 0, 0);
-        printInfo(info, player);
-        printLog(log, logs);
-        printInv(inv, player, highlight, invhgNum);
-        wnoutrefresh(main);
-        wnoutrefresh(info);
-        wnoutrefresh(log);
-        wnoutrefresh(inv);
-        doupdate();
-        printFovGame(main, player, *currentMap, changedMap);
-        attron(COLOR_PAIR(BOX_PAIR));
-        box(main, 0, 0);
-        box(info, 0, 0);
-        box(log, 0, 0);
-        box(inv, 0, 0);
-        attroff(COLOR_PAIR(BOX_PAIR));
-        wnoutrefresh(stdscr);
-        wnoutrefresh(main);
-        wnoutrefresh(info);
-        wnoutrefresh(log);
-        wnoutrefresh(inv);
-        doupdate();
-        input = wgetch(stdscr); //get player input
+    do {input = wgetch(stdscr); //get player input
         if (mode == 1) {
             if (input == KEY_LEFT) {
                 changedMap = player.movePlayer(*currentMap, pPos[0], pPos[1]-1);
@@ -322,6 +290,37 @@ int main() {
         } else {
             std::this_thread::sleep_for(std::chrono::milliseconds(50));
         }
+        
+        werase(stdscr);
+        werase(main);
+        werase(info);
+        werase(log);
+        werase(inv);
+        box(main, 0, 0);
+        box(info, 0, 0);
+        box(log, 0, 0);
+        box(inv, 0, 0);
+        printInfo(info, player);
+        printLog(log, logs);
+        printInv(inv, player, highlight, invhgNum);
+        wnoutrefresh(main);
+        wnoutrefresh(info);
+        wnoutrefresh(log);
+        wnoutrefresh(inv);
+        doupdate();
+        printFovGame(main, player, *currentMap, changedMap);
+        attron(COLOR_PAIR(BOX_PAIR));
+        box(main, 0, 0);
+        box(info, 0, 0);
+        box(log, 0, 0);
+        box(inv, 0, 0);
+        attroff(COLOR_PAIR(BOX_PAIR));
+        wnoutrefresh(stdscr);
+        wnoutrefresh(main);
+        wnoutrefresh(info);
+        wnoutrefresh(log);
+        wnoutrefresh(inv);
+        doupdate();
     } while (player.getWeapon() != "Iron_Sword"); //set a requirement for the starter map
     resize_term((main_x > info_x ? main_x : info_x) + log_x, main_y + info_y + 3 + inv_y + 1);
     werase(stdscr);
@@ -360,12 +359,12 @@ void printEntireGame(WINDOW* window, Player& plyr, std::vector<std::string>& cMa
             } else if (chr == TREE) {           //if its a tree
                 wattron(window, A_DIM);
                 wattron(window, COLOR_PAIR(TREE_PAIR));
-                mvwaddch(window, i + 1, j + 1, 'Y');
+                mvwaddch(window, i + 1, j + 1, L'♣');
                 wattroff(window, COLOR_PAIR(TREE_PAIR));
                 wattroff(window, A_DIM);
             } else if (chr == IGOLD) {          //if its item gold
                 wattron(window, COLOR_PAIR(GOLD_PAIR));
-                mvwaddch(window, i + 1, j + 1, 169);
+                mvwaddch(window, i + 1, j + 1, L'⌐');
                 wattroff(window, COLOR_PAIR(GOLD_PAIR));
             } else if (chr == KEY) {            //if its item gold
                 wattron(window, COLOR_PAIR(KEY_PAIR));
@@ -373,7 +372,7 @@ void printEntireGame(WINDOW* window, Player& plyr, std::vector<std::string>& cMa
                 wattroff(window, COLOR_PAIR(KEY_PAIR));
             } else if (chr == CHEST) {          //if its item gold
                 wattron(window, COLOR_PAIR(CHEST_PAIR));
-                mvwaddch(window, i + 1, j + 1, ACS_PLMINUS);
+                mvwaddch(window, i + 1, j + 1, L'□');
                 wattroff(window, COLOR_PAIR(CHEST_PAIR));
             } else if (chr == H_TRAP) {         //if its a hidden trap
                 wattron(window, COLOR_PAIR(EMPTY_PAIR));
@@ -496,7 +495,7 @@ void printFovGame (WINDOW* window, Player& plyr, std::vector<std::string> cMap, 
                 } else if (chr == TREE) {       //if its a tree
                     wattron(window, A_DIM);
                     wattron(window, COLOR_PAIR(TREE_PAIR));
-                    mvwaddch(window, i + 1, j + 1, 'Y');
+                    mvwaddch(window, i + 1, j + 1, L'♣');
                     wattroff(window, COLOR_PAIR(TREE_PAIR));
                     wattroff(window, A_DIM);
                 } else if (chr == IGOLD) {      //if its item gold
@@ -505,11 +504,11 @@ void printFovGame (WINDOW* window, Player& plyr, std::vector<std::string> cMap, 
                     wattroff(window, COLOR_PAIR(GOLD_PAIR));
                 } else if (chr == KEY) {        //if its item gold
                     wattron(window, COLOR_PAIR(KEY_PAIR));
-                    mvwaddch(window, i + 1, j + 1, 172);
+                    mvwaddch(window, i + 1, j + 1, L'⌐');
                     wattroff(window, COLOR_PAIR(KEY_PAIR));
                 } else if (chr == CHEST) {      //if its item gold
                     wattron(window, COLOR_PAIR(CHEST_PAIR));
-                    mvwaddch(window, i + 1, j + 1, ACS_PLMINUS);
+                    mvwaddch(window, i + 1, j + 1, L'□');
                     wattroff(window, COLOR_PAIR(CHEST_PAIR));
                 } else if (chr == H_TRAP) {     //if its a hidden trap
                     wattron(window, COLOR_PAIR(EMPTY_PAIR));
