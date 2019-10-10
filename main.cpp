@@ -45,9 +45,9 @@
 #define WATER_PAIR  15
 
 std::vector<std::string> test1 = {
-    "##############",
-    "#@   ******  #",
-    "#            #",
+    "######wwwwwwww",
+    "#@   ******  w",
+    "#            w",
     "#     #    k #",
     "#  ^  #      #",
     "#     #    c #",
@@ -57,20 +57,20 @@ std::vector<std::string> test1 = {
 std::vector<std::string> test2 = {
     "#########",
     "#x  XXXX#",
-    "#       #",
-    "# @  v  #",
-    "#       #",
+    "#x      #",
+    "#x@  v  #",
+    "#x      #",
     "#########"
 };
 
 std::vector<std::string> start = {
-    "ttttttttttttttttttt",
-    "t@t  c tt    t    t",
-    "t   tttt   t t  t t",
-    "t t      t t t t  t",
-    "t ttt  t t     tt t",
-    "t t      t ttt tk t",
-    "ttttttttttttttttttt"
+    "tttttwwwwwwttttttttt",
+    "t@t   cwtt   t   t t",
+    "t   tttw   ttt t   t",
+    "t t    w t   t  t  t",
+    "t tttt t t t    tt t",
+    "t t      t  ttt tk t",
+    "tttttttttwwwwttttttt"
 };
 
 //map
@@ -89,7 +89,7 @@ void printInv(WINDOW* window, Player& plyr, bool highlight, unsigned short int& 
 std::string getHG(WINDOW* window, Player& plyr, unsigned short int& invhgNum);
 void addLog(std::vector<std::string>& log, std::string message);
 void spawnPlayer(Player& plyr, std::vector<std::string>& cMap);
-void renderScreen(Player& plyr, std::vector<std::string>* currentMap, bool changedMap, bool highlight, unsigned short int& invhgNum, WINDOW* stdscr, WINDOW* main, WINDOW* info, WINDOW* log, WINDOW* inv);
+void renderScreen(Player& plyr, std::vector<std::string>* currentMap, bool& changedMap, bool& highlight, unsigned short int& invhgNum, WINDOW* stdscr, WINDOW* main, WINDOW* info, WINDOW* log, WINDOW* inv);
 
 //here comes the fun part
 int main() {
@@ -233,7 +233,8 @@ int main() {
     bool highlight = false; //to highlight items in inventory mode
     unsigned short int invhgNum = 0;
     bool changedMap = false;
-    do {input = wgetch(stdscr); //get player input
+    do {
+        input = wgetch(stdscr); //get player input
         if (mode == 1) {
             if (input == KEY_LEFT) {
                 changedMap = player.movePlayer(*currentMap, pPos[0], pPos[1]-1);
@@ -291,6 +292,7 @@ int main() {
         } else {
             std::this_thread::sleep_for(std::chrono::milliseconds(50));
         }
+
         renderScreen(player, currentMap, changedMap, highlight, invhgNum, stdscr, main, info, log, inv);
 
     } while (player.getWeapon() != "Iron_Sword"); //set a requirement for the starter map
@@ -412,22 +414,22 @@ void printFovGame (WINDOW* window, Player& plyr, std::vector<std::string> cMap, 
         fovMap.push_back(temp);
     }
     //then extend the vision to 2 blocks
-    if (cMap[x-1][y] != WALL && cMap[x-1][y] != TREE) {     //above
+    if (cMap[x-1][y] != WALL && cMap[x-1][y] != TREE && cMap[x-1][y] != WATER) {     //above
         fovMap[x-2][y-1] = 'v';
         fovMap[x-2][y] = 'v';
         fovMap[x-2][y+1] = 'v';
     }
-    if (cMap[x][y-1] != WALL && cMap[x][y-1] != TREE) {     //left
+    if (cMap[x][y-1] != WALL && cMap[x][y-1] != TREE && cMap[x][y-1] != WATER) {     //left
         fovMap[x-1][y-2] = 'v';
         fovMap[x][y-2] = 'v';
         fovMap[x+1][y-2] = 'v';
     }
-    if (cMap[x][y+1] != WALL && cMap[x][y+1] != TREE) {     //right
+    if (cMap[x][y+1] != WALL && cMap[x][y+1] != TREE && cMap[x][y+1] != WATER) {     //right
         fovMap[x-1][y+2] = 'v';
         fovMap[x][y+2] = 'v';
         fovMap[x+1][y+2] = 'v';
     }
-    if (cMap[x+1][y] != WALL && cMap[x+1][y] != TREE) {     //under
+    if (cMap[x+1][y] != WALL && cMap[x+1][y] != TREE && cMap[x+1][y] != WATER) {     //under
         fovMap[x+2][y-1] = 'v';
         fovMap[x+2][y] = 'v';
         fovMap[x+2][y+1] = 'v';
@@ -613,7 +615,7 @@ void spawnPlayer(Player& plyr, std::vector<std::string>& cMap) {
 }
 
 //render screen
-void renderScreen(Player& plyr, std::vector<std::string>* currentMap, bool changedMap, bool highlight, unsigned short int& invhgNum, WINDOW* stdscr, WINDOW* main, WINDOW* info, WINDOW* log, WINDOW* inv) {
+void renderScreen(Player& plyr, std::vector<std::string>* currentMap, bool& changedMap, bool& highlight, unsigned short int& invhgNum, WINDOW* stdscr, WINDOW* main, WINDOW* info, WINDOW* log, WINDOW* inv) {
     std::vector<std::string>& logs = plyr.getLogs();
     werase(stdscr);
     werase(main);
