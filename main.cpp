@@ -291,7 +291,6 @@ int main() {
         } else {
             std::this_thread::sleep_for(std::chrono::milliseconds(50));
         }
-        
         renderScreen(player, currentMap, changedMap, highlight, invhgNum, stdscr, main, info, log, inv);
 
     } while (player.getWeapon() != "Iron_Sword"); //set a requirement for the starter map
@@ -306,7 +305,7 @@ void printEntireGame(WINDOW* window, Player& plyr, std::vector<std::string>& cMa
     for (unsigned int i = 0; i < cMap.size(); i++) {
         for (unsigned int j = 0; j < cMap[i].size(); j++) {
             char chr = cMap[i][j];
-            if (chr == PLAYER) {            //if its a player
+            if (chr == PLAYER) {                //if its a player
                 if (plyr.getHealth() == 0) {
                     wattron(window, COLOR_PAIR(DEAD_PAIR));
                     mvwaddch(window, i + 1, j + 1, chr);
