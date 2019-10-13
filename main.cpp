@@ -9,23 +9,22 @@
 #include <thread>
 #include <chrono>
 #include <curses.h>
-#include <panel.h>
 #include <windows.h>
 #include "Player.h"
 
 //define characters which appear on map, for easy usage
-#define EMPTY   ' '
-#define WALL    '#'
-#define TREE    't'
-#define PLAYER  '@'
-#define IGOLD   '*'
-#define KEY     'k'
-#define CHEST   'c'
-#define H_TRAP  'x'
-#define V_TRAP  'X'
-#define U_STAIR '^'
-#define D_STAIR 'v'
-#define WATER   'w'
+#define EMPTY       ' '
+#define WALL        '#'
+#define TREE        't'
+#define PLAYER      '@'
+#define IGOLD       '*'
+#define KEY         'k'
+#define CHEST       'c'
+#define H_TRAP      'x'
+#define V_TRAP      'X'
+#define U_STAIR     '^'
+#define D_STAIR     'v'
+#define WATER       'w'
 
 //define color pair numbers, for easy usage
 #define EMPTY_PAIR  1
@@ -58,7 +57,7 @@ std::vector<std::string> test2 = {
     "#########",
     "#x  XXXX#",
     "#x      #",
-    "#x@  v  #",
+    "#x  @v  #",
     "#x      #",
     "#########"
 };
@@ -73,23 +72,55 @@ std::vector<std::string> start = {
     "tttttttttwwwwttttttt"
 };
 
+std::vector<std::string> forest = {
+    "ttttttttttttwwwwtttt",
+    "t@      w      w   t",
+    "ttttttt   twww w w t",
+    "t    *ttttt   ** t t",
+    "t*tttttt  *  ttttt t",
+    "t     *t* tt   **  t",
+    "###ttt ttttttttttt t",
+    "#v#* t *     t*    t",
+    "# #t t ttttt    tttt",
+    "#    * ttttttt  t*tt",
+    "##tttt   *     *   t",
+    "tttttttttttttttttttt"
+};
+
+std::vector<std::string> dungeon = {
+    "####################",
+    "#                  #",
+    "#                  #",
+    "#                  #",
+    "#                  #",
+    "#                  #",
+    "#                  #",
+    "#^                 #",
+    "#@                 #",
+    "#                  #",
+    "#                  #",
+    "####################"
+};
+
 //map
 std::map<std::string, std::vector<std::string>> maps{
     {"test1", test1},
     {"test2", test2},
-    {"start", start}
+    {"start", start},
+    {"forest", forest},
+    {"dungeon", dungeon}
 };
 
 //function prototypes
-void printEntireGame(WINDOW* window, Player& plyr, std::vector<std::string>& cMap, bool& delayedPrint);
-void printFovGame (WINDOW* window, Player& plyr, std::vector<std::string> cMap, bool& delayedPrint);
+void printEntireGame(WINDOW* window, Player& plyr, std::vector<std::string>* cMap, bool& delayedPrint);
+void printFovGame (WINDOW* window, Player& plyr, std::vector<std::string>* cMap, bool& delayedPrint);
 void printInfo(WINDOW* window, Player& plyr);
 void printLog(WINDOW* window, std::vector<std::string> logs);
 void printInv(WINDOW* window, Player& plyr, bool highlight, unsigned short int& invhgNum);
 std::string getHG(WINDOW* window, Player& plyr, unsigned short int& invhgNum);
 void addLog(std::vector<std::string>& log, std::string message);
 void spawnPlayer(Player& plyr, std::vector<std::string>& cMap);
-void renderScreen(Player& plyr, std::vector<std::string>* currentMap, bool& changedMap, bool& highlight, unsigned short int& invhgNum, WINDOW* stdscr, WINDOW* main, WINDOW* info, WINDOW* log, WINDOW* inv);
+void renderScreen(Player& plyr, std::vector<std::string>& currentMap, bool& changedMap, bool& highlight, unsigned short int& invhgNum, WINDOW* stdscr, WINDOW* main, WINDOW* info, WINDOW* log, WINDOW* inv, bool delayedPrint);
 
 //here comes the fun part
 int main() {
@@ -118,26 +149,25 @@ int main() {
     init_pair(15, COLOR_WHITE, COLOR_CYAN);     //water
     resize_term(16, 24);
     SetConsoleTitle(TEXT(""));
-    curs_set(0); //hide the blinking underline
+    curs_set(0);    //hide the blinking underline
     keypad(stdscr, true);
-    noecho();
-    cbreak(); //idk what this does but according to the PDMANUAL, this enables immediate input instead of buffering
+    noecho();   //disable input feedback
+    cbreak();   //idk what this does but according to the PDMANUAL, this enables immediate input instead of buffering
     unsigned int mmhgNum = 0;
     std::vector<std::string> mmList = {
         "Play game",
-        "Options",
         "Exit"
     };
     do {
         werase(stdscr);
         for (unsigned int i = 0; i < mmList.size(); i++) {
             if (i == mmhgNum) {
-                mvwprintw(stdscr, 8 + i, 5, ">");
+                mvwprintw(stdscr, 8 + (2*i), 5, ">");
                 wattron(stdscr, COLOR_PAIR(HG_PAIR));
             } else {
                 wattron(stdscr, COLOR_PAIR(BOX_PAIR));
             }
-            mvwprintw(stdscr, 8 + i, 7, mmList[i].c_str());
+            mvwprintw(stdscr, 8 + (2*i), 7, mmList[i].c_str());
             if (i == mmhgNum) {
                 wattroff(stdscr, COLOR_PAIR(HG_PAIR));
             } else {
@@ -160,11 +190,6 @@ int main() {
             if (mmhgNum == 0) {
                 break;
             } else if (mmhgNum == 1) {
-                /*TODO: settings
-                1: let the player disable colors in settings, the setting be locked if terminal doesnt support colors
-                2: let the players change audio volume (ofc ill have to add audio first)
-                */
-            } else if (mmhgNum == 2) {
                 return 0;
             }
         }
@@ -172,7 +197,7 @@ int main() {
     keypad(stdscr, false);
     echo();
     curs_set(1);
-    char playerName[] = {""}; //NOTE: never forget to initialize a C-style string, even if its meant to be empty
+    char playerName[] = {""};   //NOTE: never forget to initialize a C-style string, even if its meant to be empty
     do {
         werase(stdscr);
         mvwprintw(stdscr, 8, 5, "Enter a name: ");
@@ -184,7 +209,7 @@ int main() {
             break;
         }
     } while (true);
-    Player player(playerName, "start", 50, 0); //initialize player
+    Player player(playerName, "start", 50, 0);  //initialize player
     std::vector<std::string>* currentMap = &maps[player.getLoc()];
     //initialize the sizes for all windows
     int main_x = currentMap->size() + 2;
@@ -229,7 +254,7 @@ int main() {
     getch();
     spawnPlayer(player, *currentMap);
     int* pPos = player.getPos();
-    int mode = 1; //1=move, 2=inv
+    int mode = 1;   //1=move, 2=inv
     bool highlight = false; //to highlight items in inventory mode
     unsigned short int invhgNum = 0;
     bool changedMap = false;
@@ -251,7 +276,7 @@ int main() {
                 resize_term((main_x > info_x ? main_x : info_x) + log_x, main_y + info_y + 3 + inv_y + 1);
                 curs_set(0);
             }
-            if (changedMap == true) { //if map was changed
+            if (changedMap == true) {   //if map has changed
                 currentMap = &maps[player.getLoc()];
                 int main_x = currentMap->size() + 2;
                 int main_y = (*currentMap)[0].size() + 2;
@@ -287,26 +312,142 @@ int main() {
                 mode = 1;
             }
         }
+
+        renderScreen(player, *currentMap, changedMap, highlight, invhgNum, stdscr, main, info, log, inv, false);
+
         if (mode == 1) {
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
         } else {
             std::this_thread::sleep_for(std::chrono::milliseconds(50));
         }
+    } while (player.getWeapon() != "Iron_Sword");   //set a requirement for the starter map
 
-        renderScreen(player, currentMap, changedMap, highlight, invhgNum, stdscr, main, info, log, inv);
+    highlight = false;
+    mode = 1;
 
-    } while (player.getWeapon() != "Iron_Sword"); //set a requirement for the starter map
+    werase(stdscr);
+    box(stdscr, 0, 0);
+    wnoutrefresh(stdscr);
+    doupdate();
+    //LAST: std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+    mvprintw(3, 9, "He found a sword");
+    mvprintw(4, 13, "with weird shining symbols on it");
+    wnoutrefresh(stdscr);
+    doupdate();
+    //LAST: std::this_thread::sleep_for(std::chrono::milliseconds(2500));
+    mvprintw(7, 12, "he then decided to go home.");
+    wnoutrefresh(stdscr);
+    doupdate();
+    //LAST: std::this_thread::sleep_for(std::chrono::milliseconds(2500));
+    mvprintw(12, 16, "Press any key to continue");
+    wnoutrefresh(stdscr);
+    doupdate();
+    getch();
+
+    werase(stdscr);
+    wnoutrefresh(stdscr);
+    doupdate();
+
     player.changeLoc("forest");
-    //TODO: continue game story here
+    currentMap = &maps[player.getLoc()];
+    changedMap = true;
+    spawnPlayer(player, *currentMap);
+    main_x = (*currentMap).size() + 2;
+    main_y = (*currentMap)[0].size() + 2;
+    info_x = (main_x < 8 ? 8 : main_x);
+    log_y = main_y + info_y + 1;
+    inv_x = main_x + log_x;
+    resize_term((main_x > info_x ? main_x : info_x) + log_x, main_y + info_y + 3 + inv_y + 1);
+    resize_window(main, main_x, main_y);
+    mvwin(main, 0, 1);
+    resize_window(info, info_x, info_y);
+    mvwin(info, 0, main_y+2);
+    resize_window(log, log_x, log_y);
+    mvwin(log, (main_x > info_x ? main_x : info_x), 1);
+    resize_window(inv, inv_x, inv_y);
+    mvwin(inv, 0, main_y + info_y+3);
+    werase(main);
+    box(main, 0, 0);
+    wnoutrefresh(main);
+    doupdate();
+
+    //LAST: std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+    renderScreen(player, *currentMap, changedMap, highlight, invhgNum, stdscr, main, info, log, inv, true);
+
+    do {
+        input = wgetch(stdscr); //get player input
+        if (mode == 1) {
+            if (input == KEY_LEFT) {
+                changedMap = player.movePlayer(*currentMap, pPos[0], pPos[1]-1);
+            } else if (input == KEY_UP) {
+                changedMap = player.movePlayer(*currentMap, pPos[0]-1, pPos[1]);
+            } else if (input == KEY_RIGHT) {
+                changedMap = player.movePlayer(*currentMap, pPos[0], pPos[1]+1);
+            } else if (input == KEY_DOWN) {
+                changedMap = player.movePlayer(*currentMap, pPos[0]+1, pPos[1]);
+            } else if (input == 'i') {
+                highlight = true;
+                mode = 2;
+            } else if (input == KEY_RESIZE) {
+                resize_term((main_x > info_x ? main_x : info_x) + log_x, main_y + info_y + 3 + inv_y + 1);
+                curs_set(0);
+            }
+            if (changedMap == true) {   //if map has changed
+                currentMap = &maps[player.getLoc()];
+                int main_x = (*currentMap).size() + 2;
+                int main_y = (*currentMap)[0].size() + 2;
+                int info_x = (main_x < 8 ? 8 : main_x);
+                int log_y = main_y + info_y + 1;
+                int inv_x = main_x + log_x;
+                resize_term((main_x > info_x ? main_x : info_x) + log_x, main_y + info_y + 3 + inv_y + 1);
+                resize_window(main, main_x, main_y);
+                mvwin(main, 0, 1);
+                resize_window(info, info_x, info_y);
+                mvwin(info, 0, main_y+2);
+                resize_window(log, log_x, log_y);
+                mvwin(log, (main_x > info_x ? main_x : info_x), 1);
+                resize_window(inv, inv_x, inv_y);
+                mvwin(inv, 0, main_y + info_y+3);
+                spawnPlayer(player, *currentMap);
+            }
+        } else if (mode == 2) {
+            if (input == KEY_UP && invhgNum > 0) {
+                invhgNum -= 1;
+            } else if (input == KEY_UP && invhgNum == 0) {
+                invhgNum = player.getInv().size() - 1;
+            } else if (input == KEY_DOWN && invhgNum < player.getInv().size() - 1) {
+                invhgNum += 1;
+            } else if (input == KEY_DOWN && invhgNum == player.getInv().size() - 1) {
+                invhgNum = 0;
+            } else if (input == 'e') {
+                player.useItem(getHG(inv, player, invhgNum));
+            } else if (input == 'd') {
+                player.delItem(getHG(inv, player, invhgNum), 1);
+            } else if (input == 'i') {
+                highlight = false;
+                mode = 1;
+            }
+        }
+        
+        renderScreen(player, *currentMap, changedMap, highlight, invhgNum, stdscr, main, info, log, inv, false);
+
+        if (mode == 1) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        } else {
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        }
+    } while (true);
+    //TODO: continue game story
     endwin();
     return 0;
 }
 
 //this function prints out the *entire* game to the screen
-void printEntireGame(WINDOW* window, Player& plyr, std::vector<std::string>& cMap, bool& delayedPrint) {
-    for (unsigned int i = 0; i < cMap.size(); i++) {
-        for (unsigned int j = 0; j < cMap[i].size(); j++) {
-            char chr = cMap[i][j];
+void printEntireGame(WINDOW* window, Player& plyr, std::vector<std::string>* cMap, bool& delayedPrint) {
+    for (unsigned int i = 0; i < (*cMap).size(); i++) {
+        for (unsigned int j = 0; j < (*cMap)[i].size(); j++) {
+            char chr = (*cMap)[i][j];
             if (chr == PLAYER) {                //if its a player
                 if (plyr.getHealth() == 0) {
                     wattron(window, COLOR_PAIR(DEAD_PAIR));
@@ -377,15 +518,15 @@ void printEntireGame(WINDOW* window, Player& plyr, std::vector<std::string>& cMa
 }
 
 //this function prints the game *visible* to player
-void printFovGame (WINDOW* window, Player& plyr, std::vector<std::string> cMap, bool& delayedPrint) {
+void printFovGame (WINDOW* window, Player& plyr, std::vector<std::string>* cMap, bool& delayedPrint) {
     std::vector<std::string> fovMap;
     int* pP = plyr.getPos();
     int x = pP[0];
     int y = pP[1];
     //first generate a fov map
-    for (unsigned int i = 0; i < cMap.size(); i++) {
+    for (unsigned int i = 0; i < (*cMap).size(); i++) {
         std::string temp;
-        for (unsigned int j = 0; j < cMap[0].size(); j++) {
+        for (unsigned int j = 0; j < (*cMap)[0].size(); j++) {
             bool visible = false;
             if ((i == x - 1) && (j == y - 1)) {         //above-left
                 visible = true;
@@ -414,30 +555,30 @@ void printFovGame (WINDOW* window, Player& plyr, std::vector<std::string> cMap, 
         fovMap.push_back(temp);
     }
     //then extend the vision to 2 blocks
-    if (cMap[x-1][y] != WALL && cMap[x-1][y] != TREE && cMap[x-1][y] != WATER) {     //above
+    if ((*cMap)[x-1][y] != WALL && (*cMap)[x-1][y] != TREE && x != 1) {                  //above
         fovMap[x-2][y-1] = 'v';
         fovMap[x-2][y] = 'v';
         fovMap[x-2][y+1] = 'v';
     }
-    if (cMap[x][y-1] != WALL && cMap[x][y-1] != TREE && cMap[x][y-1] != WATER) {     //left
+    if ((*cMap)[x][y-1] != WALL && (*cMap)[x][y-1] != TREE && y != 1) {                  //left
         fovMap[x-1][y-2] = 'v';
         fovMap[x][y-2] = 'v';
         fovMap[x+1][y-2] = 'v';
     }
-    if (cMap[x][y+1] != WALL && cMap[x][y+1] != TREE && cMap[x][y+1] != WATER) {     //right
+    if ((*cMap)[x][y+1] != WALL && (*cMap)[x][y+1] != TREE && y != (*cMap)[0].size()-2) {   //right
         fovMap[x-1][y+2] = 'v';
         fovMap[x][y+2] = 'v';
         fovMap[x+1][y+2] = 'v';
     }
-    if (cMap[x+1][y] != WALL && cMap[x+1][y] != TREE && cMap[x+1][y] != WATER) {     //under
+    if ((*cMap)[x+1][y] != WALL && (*cMap)[x+1][y] != TREE && x != (*cMap).size()-2) {      //under
         fovMap[x+2][y-1] = 'v';
         fovMap[x+2][y] = 'v';
         fovMap[x+2][y+1] = 'v';
     }
     //then print out whatever is visible
-    for (unsigned int i = 0; i < cMap.size(); i++) {
-        for (unsigned int j = 0; j < cMap[i].size(); j++) {
-            char chr = cMap[i][j];
+    for (unsigned int i = 0; i < (*cMap).size(); i++) {
+        for (unsigned int j = 0; j < (*cMap)[i].size(); j++) {
+            char chr = (*cMap)[i][j];
             bool visible = false;
 
             if (fovMap[i][j] == 'v') {
@@ -509,6 +650,11 @@ void printFovGame (WINDOW* window, Player& plyr, std::vector<std::string> cMap, 
                 continue;
             } else {
                 mvwaddch(window, i + 1, j + 1, EMPTY);
+            }
+            if (delayedPrint == true) {         //delayed print for animated map loading
+                Sleep(10);
+                wnoutrefresh(window);
+                doupdate();
             }
         }
         printw("\n");
@@ -615,14 +761,14 @@ void spawnPlayer(Player& plyr, std::vector<std::string>& cMap) {
 }
 
 //render screen
-void renderScreen(Player& plyr, std::vector<std::string>* currentMap, bool& changedMap, bool& highlight, unsigned short int& invhgNum, WINDOW* stdscr, WINDOW* main, WINDOW* info, WINDOW* log, WINDOW* inv) {
+void renderScreen(Player& plyr, std::vector<std::string>& currentMap, bool& changedMap, bool& highlight, unsigned short int& invhgNum, WINDOW* stdscr, WINDOW* main, WINDOW* info, WINDOW* log, WINDOW* inv, bool delayedPrint) {
     std::vector<std::string>& logs = plyr.getLogs();
     werase(stdscr);
     werase(main);
     werase(info);
     werase(log);
     werase(inv);
-    box(main, 0, 0);
+    wborder(main, L'║', L'║', L'═', L'═', L'╔', L'╗', L'╚', L'╝');
     box(info, 0, 0);
     box(log, 0, 0);
     box(inv, 0, 0);
@@ -633,10 +779,10 @@ void renderScreen(Player& plyr, std::vector<std::string>* currentMap, bool& chan
     wnoutrefresh(info);
     wnoutrefresh(log);
     wnoutrefresh(inv);
-    doupdate();
-    printFovGame(main, plyr, *currentMap, changedMap);
+    doupdate(); 
+    printEntireGame(main, plyr, &currentMap, delayedPrint);
     attron(COLOR_PAIR(BOX_PAIR));
-    box(main, 0, 0);
+    wborder(main, L'║', L'║', L'═', L'═', L'╔', L'╗', L'╚', L'╝');
     box(info, 0, 0);
     box(log, 0, 0);
     box(inv, 0, 0);

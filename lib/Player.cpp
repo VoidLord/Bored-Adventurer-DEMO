@@ -11,7 +11,7 @@ m_gold(gold)
 bool Player::movePlayer(std::vector<std::string>& cMap, int x, int y) {
     int* pPos = this->getPos();
     if (cMap[pPos[0]][pPos[1]] == '@' && m_health != 0) {
-        if (cMap[x][y] != '#' && cMap[x][y] != 't' && cMap[x][y] != 'w' && cMap[x][y] != 'c' && cMap[x][y] != 'X' && cMap[x][y] != 'x' && cMap[x][y] != '^' && cMap[x][y] != 'v') {
+        if (cMap[x][y] != '#' && cMap[x][y] != 't' && cMap[x][y] != 'w' && cMap[x][y] != 'c' && cMap[x][y] != 'X' && cMap[x][y] != 'x' && cMap[x][y] != '^' && cMap[x][y] != 'v' && cMap[x][y] != '>') {
             if (cMap[x][y] == '*') {            //if step on gold
                 this->giveGold(1);
             } else if (cMap[x][y] == 'k') {     //if step on key
@@ -26,7 +26,8 @@ bool Player::movePlayer(std::vector<std::string>& cMap, int x, int y) {
                 this->addLog(m_name + " used a Key");
                 if (m_currentMap == "start") {
                     this->giveItem("Iron_Sword", 1);
-                    this->addLog("Equip your new sword");
+                    this->giveItem("Health_Potion", 2);
+                    this->addLog("Equip your new sword to continue");
                 } else {
                     this->giveGold((rand() % 20 + 20)); //random number between 20-40
                 }
@@ -40,12 +41,15 @@ bool Player::movePlayer(std::vector<std::string>& cMap, int x, int y) {
                 this->changeLoc("test2");
                 return true;
             }
-        } else if (cMap[x][y] == 'v') {
-            if (m_currentMap == "test2") {      //if step on stairs
+        } else if (cMap[x][y] == 'v') {         //if step on stairs
+            if (m_currentMap == "test2") {      
                 this->changeLoc("test1");
                 return true;
+            } else if (m_currentMap == "forest") {
+                this->changeLoc("dungeon");
+                return true;
             }
-        }
+        } 
     }
     return false;
 }
@@ -163,5 +167,13 @@ void Player::delItem(std::string item, int amount, bool output) {
     }
     if (m_inventory[item] == 0) {
         m_inventory.erase(item);
+    }
+}
+
+bool Player::hasItem(std::string item) {
+    if (m_inventory.find(item) != m_inventory.end()) {
+        return true;
+    } else {
+        return false;
     }
 }

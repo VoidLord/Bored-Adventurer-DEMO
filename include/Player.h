@@ -37,6 +37,7 @@ public:
     void giveItem(std::string item, int amount);
     void useItem(std::string item);
     void delItem(std::string item, int amount, bool output = true);
+    bool hasItem(std::string item);
 };
 
 #endif
