@@ -17,6 +17,8 @@
 #define WALL        '#'
 #define TREE        't'
 #define PLAYER      '@'
+#define ENEMY       'e'
+#define BOSS        'b'
 #define IGOLD       '*'
 #define KEY         'k'
 #define CHEST       'c'
@@ -65,10 +67,10 @@ std::vector<std::string> test2 = {
 std::vector<std::string> start = {
     "tttttwwwwwwttttttttt",
     "t@t   cwtt   t   t t",
-    "t   tttw   ttt t   t",
-    "t t    w t   t  t  t",
-    "t tttt t t t    tt t",
-    "t t      t  ttt tk t",
+    "t   tttw   ttt t  xt",
+    "txt    w t   t  t  t",
+    "t tttt t t t   xtt t",
+    "t t  x   t  ttt tk t",
     "tttttttttwwwwttttttt"
 };
 
@@ -76,30 +78,30 @@ std::vector<std::string> forest = {
     "ttttttttttttwwwwtttt",
     "t@      w      w   t",
     "ttttttt   twww w w t",
-    "t    *ttttt   ** t t",
+    "t    ktttttx  ** t t",
     "t*tttttt  *  ttttt t",
     "t     *t* tt   **  t",
-    "###ttt ttttttttttt t",
+    "###ttt ttxtttttttt t",
     "#v#* t *     t*    t",
-    "# #t t ttttt    tttt",
-    "#    * ttttttt  t*tt",
-    "##tttt   *     *   t",
+    "# #t t ttttt   xtttt",
+    "#    *  tttttt  tctt",
+    "##ttttx  *     *   t",
     "tttttttttttttttttttt"
 };
 
 std::vector<std::string> dungeon = {
-    "####################",
-    "#                  #",
-    "#                  #",
-    "#                  #",
-    "#                  #",
-    "#                  #",
-    "#                  #",
-    "#^                 #",
-    "#@                 #",
-    "#                  #",
-    "#                  #",
-    "####################"
+    "#####################",
+    "#     xx#ccc#xx     #",
+    "# #       b       # #",
+    "# #  x#       #x  # #",
+    "# #               # #",
+    "# ##x           x## #",
+    "#         x         #",
+    "#x  #############  x#",
+    "###               ###",
+    "#^######## ##########",
+    "#@                  #",
+    "#####################"
 };
 
 //map
@@ -126,7 +128,8 @@ void renderScreen(Player& plyr, std::vector<std::string>& currentMap, bool& chan
 int main() {
     int input;
     initscr(); //initialize pdcurses
-    if (has_colors() == false) { //TODO: connect this to settings once they are added
+    SetConsoleOutputCP(437);
+    if (has_colors() == false) {
         endwin();
         std::cout << "ERROR: Colors are not supported in this console/terminal." << std::endl;
         return 0;
@@ -209,7 +212,7 @@ int main() {
             break;
         }
     } while (true);
-    Player player(playerName, "start", 50, 0);  //initialize player
+    Player player(playerName, "start", 100, 0);  //initialize player
     std::vector<std::string>* currentMap = &maps[player.getLoc()];
     //initialize the sizes for all windows
     int main_x = currentMap->size() + 2;
@@ -249,7 +252,6 @@ int main() {
     doupdate();
     //LAST: std::this_thread::sleep_for(std::chrono::milliseconds(2500));
     mvprintw(12, 13, "Press any key to continue");
-    wnoutrefresh(stdscr);
     doupdate();
     getch();
     spawnPlayer(player, *currentMap);
@@ -258,6 +260,8 @@ int main() {
     bool highlight = false; //to highlight items in inventory mode
     unsigned short int invhgNum = 0;
     bool changedMap = false;
+    wnoutrefresh(stdscr);
+    renderScreen(player, *currentMap, changedMap, highlight, invhgNum, stdscr, main, info, log, inv, true);
     do {
         input = wgetch(stdscr); //get player input
         if (mode == 1) {
@@ -504,6 +508,14 @@ void printEntireGame(WINDOW* window, Player& plyr, std::vector<std::string>* cMa
                 wattron(window, COLOR_PAIR(STAIR_PAIR));
                 mvwaddch(window, i + 1, j + 1, L'▼');
                 wattroff(window, COLOR_PAIR(STAIR_PAIR));
+            } else if (chr == ENEMY) {      //if its enemy
+                wattron(window, COLOR_PAIR(PLAYER_PAIR));
+                mvwaddch(window, i + 1, j + 1, L'ô');
+                wattroff(window, COLOR_PAIR(PLAYER_PAIR));
+            } else if (chr == BOSS) {       //if its boss
+                wattron(window, COLOR_PAIR(PLAYER_PAIR));
+                mvwaddch(window, i + 1, j + 1, L'☻');
+                wattroff(window, COLOR_PAIR(PLAYER_PAIR));
             } else {                            //if unknown
                 mvwaddch(window, i + 1, j + 1, chr);
             }
@@ -555,12 +567,12 @@ void printFovGame (WINDOW* window, Player& plyr, std::vector<std::string>* cMap,
         fovMap.push_back(temp);
     }
     //then extend the vision to 2 blocks
-    if ((*cMap)[x-1][y] != WALL && (*cMap)[x-1][y] != TREE && x != 1) {                  //above
+    if ((*cMap)[x-1][y] != WALL && (*cMap)[x-1][y] != TREE && x != 1) {                     //above
         fovMap[x-2][y-1] = 'v';
         fovMap[x-2][y] = 'v';
         fovMap[x-2][y+1] = 'v';
     }
-    if ((*cMap)[x][y-1] != WALL && (*cMap)[x][y-1] != TREE && y != 1) {                  //left
+    if ((*cMap)[x][y-1] != WALL && (*cMap)[x][y-1] != TREE && y != 1) {                     //left
         fovMap[x-1][y-2] = 'v';
         fovMap[x][y-2] = 'v';
         fovMap[x+1][y-2] = 'v';
@@ -644,6 +656,14 @@ void printFovGame (WINDOW* window, Player& plyr, std::vector<std::string>* cMap,
                     wattron(window, COLOR_PAIR(STAIR_PAIR));
                     mvwaddch(window, i + 1, j + 1, L'▼');
                     wattroff(window, COLOR_PAIR(STAIR_PAIR));
+                } else if (chr == ENEMY) {      //if its enemy
+                    wattron(window, COLOR_PAIR(PLAYER_PAIR));
+                    mvwaddch(window, i + 1, j + 1, L'ô');
+                    wattroff(window, COLOR_PAIR(PLAYER_PAIR));
+                } else if (chr == BOSS) {       //if its boss
+                    wattron(window, COLOR_PAIR(PLAYER_PAIR));
+                    mvwaddch(window, i + 1, j + 1, L'☻');
+                    wattroff(window, COLOR_PAIR(PLAYER_PAIR));
                 } else {                        //if unknown
                     mvwaddch(window, i + 1, j + 1, chr);
                 }
@@ -780,7 +800,7 @@ void renderScreen(Player& plyr, std::vector<std::string>& currentMap, bool& chan
     wnoutrefresh(log);
     wnoutrefresh(inv);
     doupdate(); 
-    printEntireGame(main, plyr, &currentMap, delayedPrint);
+    printFovGame(main, plyr, &currentMap, delayedPrint);
     attron(COLOR_PAIR(BOX_PAIR));
     wborder(main, L'║', L'║', L'═', L'═', L'╔', L'╗', L'╚', L'╝');
     box(info, 0, 0);

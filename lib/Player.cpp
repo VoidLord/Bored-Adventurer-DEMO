@@ -11,7 +11,7 @@ m_gold(gold)
 bool Player::movePlayer(std::vector<std::string>& cMap, int x, int y) {
     int* pPos = this->getPos();
     if (cMap[pPos[0]][pPos[1]] == '@' && m_health != 0) {
-        if (cMap[x][y] != '#' && cMap[x][y] != 't' && cMap[x][y] != 'w' && cMap[x][y] != 'c' && cMap[x][y] != 'X' && cMap[x][y] != 'x' && cMap[x][y] != '^' && cMap[x][y] != 'v' && cMap[x][y] != '>') {
+        if (cMap[x][y] != '#' && cMap[x][y] != 't' && cMap[x][y] != 'w' && cMap[x][y] != 'c' && cMap[x][y] != 'X' && cMap[x][y] != 'x' && cMap[x][y] != '^' && cMap[x][y] != 'v' && cMap[x][y] != '>' && cMap[x][y] != 'b' && cMap[x][y] != 'e') {
             if (cMap[x][y] == '*') {            //if step on gold
                 this->giveGold(1);
             } else if (cMap[x][y] == 'k') {     //if step on key
@@ -28,6 +28,9 @@ bool Player::movePlayer(std::vector<std::string>& cMap, int x, int y) {
                     this->giveItem("Iron_Sword", 1);
                     this->giveItem("Health_Potion", 2);
                     this->addLog("Equip your new sword to continue");
+                } else if (m_currentMap == "forest") {
+                    this->giveItem("Health_Potion", 4);
+                    this->giveGold((rand() % 30 + 25));
                 } else {
                     this->giveGold((rand() % 20 + 20)); //random number between 20-40
                 }
@@ -39,6 +42,9 @@ bool Player::movePlayer(std::vector<std::string>& cMap, int x, int y) {
         } else if (cMap[x][y] == '^') {         //if step on stairs
             if (m_currentMap == "test1") {
                 this->changeLoc("test2");
+                return true;
+            } else if (m_currentMap == "dungeon") {
+                this->changeLoc("forest");
                 return true;
             }
         } else if (cMap[x][y] == 'v') {         //if step on stairs
