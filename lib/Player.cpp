@@ -67,6 +67,16 @@ void Player::giveGold(int amount) {
     }
 }
 
+void Player::giveItem(std::string item, int amount) {
+    if (m_inventory.find(item) != m_inventory.end()) {
+        m_inventory[item] += amount;
+    } else {
+        m_inventory.insert({item, amount});
+    }
+    std::string temp = m_name + " found " + std::to_string(amount) + " " + item;
+    this->addLog(temp);
+}
+
 void Player::Heal(int amount) {
     m_health += amount;
     if (m_health > 100) {
@@ -136,16 +146,6 @@ void Player::clearLogs() {
     for (unsigned int i = 0; i < m_logs.size()-1; i++) {
         m_logs[i] = "";
     }
-}
-
-void Player::giveItem(std::string item, int amount) {
-    if (m_inventory.find(item) != m_inventory.end()) {
-        m_inventory[item] += amount;
-    } else {
-        m_inventory.insert({item, amount});
-    }
-    std::string temp = m_name + " got " + std::to_string(amount) + " " + item;
-    this->addLog(temp);
 }
 
 void Player::useItem(std::string item) {

@@ -64,13 +64,23 @@ std::vector<std::string> test2 = {
     "#########"
 };
 
+std::vector<std::string> test3 = {
+    "###################",
+    "#                 #",
+    "#    #   ##########",
+    "# @  #   #     e  #",
+    "#    #   #        #",
+    "#    #            #",
+    "###################"
+};
+
 std::vector<std::string> start = {
     "tttttwwwwwwttttttttt",
-    "t@t   cwtt   t   t t",
+    "t@t   cwtt  *t * t t",
     "t   tttw   ttt t  xt",
-    "txt    w t   t  t  t",
-    "t tttt t t t   xtt t",
-    "t t  x   t  ttt tk t",
+    "txt  * w t   t  t  t",
+    "t tttt t*t t   xtt t",
+    "t t x    t *ttt tk t",
     "tttttttttwwwwttttttt"
 };
 
@@ -91,16 +101,16 @@ std::vector<std::string> forest = {
 
 std::vector<std::string> dungeon = {
     "#####################",
-    "#     xx#ccc#xx     #",
+    "#    *xx#ccc#xx*    #",
     "# #       b       # #",
-    "# #  x#       #x  # #",
-    "# #               # #",
+    "#*#  x#       #x  #*#",
+    "#*#               #*#",
     "# ##x           x## #",
     "#         x         #",
     "#x  #############  x#",
-    "###               ###",
+    "###   *       *   ###",
     "#^######## ##########",
-    "#@                  #",
+    "#@               * *#",
     "#####################"
 };
 
@@ -115,14 +125,15 @@ std::map<std::string, std::vector<std::string>> maps{
 
 //function prototypes
 void printEntireGame(WINDOW* window, Player& plyr, std::vector<std::string>* cMap, bool& delayedPrint);
-void printFovGame (WINDOW* window, Player& plyr, std::vector<std::string>* cMap, bool& delayedPrint);
+std::vector<std::string> getfovMap (Player& plyr, const std::vector<std::string>* cMap);
+void printFovGame (WINDOW* window, Player& plyr, const std::vector<std::string>* cMap, bool& delayedPrint);
 void printInfo(WINDOW* window, Player& plyr);
 void printLog(WINDOW* window, std::vector<std::string> logs);
 void printInv(WINDOW* window, Player& plyr, bool highlight, unsigned short int& invhgNum);
 std::string getHG(WINDOW* window, Player& plyr, unsigned short int& invhgNum);
 void addLog(std::vector<std::string>& log, std::string message);
 void spawnPlayer(Player& plyr, std::vector<std::string>& cMap);
-void renderScreen(Player& plyr, std::vector<std::string>& currentMap, bool& changedMap, bool& highlight, unsigned short int& invhgNum, WINDOW* stdscr, WINDOW* main, WINDOW* info, WINDOW* log, WINDOW* inv, bool delayedPrint);
+void renderScreen(Player& plyr, const std::vector<std::string>& currentMap, bool& changedMap, bool& highlight, unsigned short int& invhgNum, WINDOW* stdscr, WINDOW* main, WINDOW* info, WINDOW* log, WINDOW* inv, bool delayedPrint);
 
 //here comes the fun part
 int main() {
@@ -163,21 +174,36 @@ int main() {
     };
     do {
         werase(stdscr);
+        wattron(stdscr, COLOR_PAIR(TITLE_PAIR));
+        mvwprintw(stdscr, 4, 4, "Bored Adventurer");
+        wattroff(stdscr, COLOR_PAIR(TITLE_PAIR));
+
         for (unsigned int i = 0; i < mmList.size(); i++) {
+
+            wattron(stdscr, COLOR_PAIR(GOLD_PAIR));
+
             if (i == mmhgNum) {
-                mvwprintw(stdscr, 8 + (2*i), 5, ">");
+                mvwprintw(stdscr, 9 + (2*i), 5, ">");
                 wattron(stdscr, COLOR_PAIR(HG_PAIR));
             } else {
                 wattron(stdscr, COLOR_PAIR(BOX_PAIR));
             }
-            mvwprintw(stdscr, 8 + (2*i), 7, mmList[i].c_str());
+            
+            mvwprintw(stdscr, 9 + (2*i), 7, mmList[i].c_str());
+
             if (i == mmhgNum) {
                 wattroff(stdscr, COLOR_PAIR(HG_PAIR));
             } else {
                 wattroff(stdscr, COLOR_PAIR(BOX_PAIR));
             }
+
+            wattroff(stdscr, COLOR_PAIR(GOLD_PAIR));
         }
+        
+        wattron(stdscr, COLOR_PAIR(GOLD_PAIR));
         box(stdscr, 0, 0);
+        wattroff(stdscr, COLOR_PAIR(GOLD_PAIR));
+
         wnoutrefresh(stdscr);
         doupdate();
         input = wgetch(stdscr);
@@ -204,14 +230,16 @@ int main() {
     do {
         werase(stdscr);
         mvwprintw(stdscr, 8, 5, "Enter a name: ");
+
+        wattron(stdscr, COLOR_PAIR(GOLD_PAIR));
         box(stdscr, 0, 0);
+        wattroff(stdscr, COLOR_PAIR(GOLD_PAIR));
+
         wnoutrefresh(stdscr);
         doupdate();
         mvwgetnstr(stdscr, 10, 7, playerName, 12);
-        if (playerName[0] != '\0') {
-            break;
-        }
-    } while (true);
+    } while (playerName[0] == '\0');
+
     Player player(playerName, "start", 100, 0);  //initialize player
     std::vector<std::string>* currentMap = &maps[player.getLoc()];
     //initialize the sizes for all windows
@@ -238,7 +266,11 @@ int main() {
     }
     resize_term((main_x > info_x ? main_x : info_x) + log_x, main_y + info_y + 3 + inv_y + 1);
     werase(stdscr);
+
+    wattron(stdscr, COLOR_PAIR(TITLE_PAIR));
     box(stdscr, 0, 0);
+    wattroff(stdscr, COLOR_PAIR(TITLE_PAIR));
+
     wnoutrefresh(stdscr);
     doupdate();
     //LAST: std::this_thread::sleep_for(std::chrono::milliseconds(1500));
@@ -330,7 +362,11 @@ int main() {
     mode = 1;
 
     werase(stdscr);
+
+    wattron(stdscr, COLOR_PAIR(TITLE_PAIR));
     box(stdscr, 0, 0);
+    wattroff(stdscr, COLOR_PAIR(TITLE_PAIR));
+
     wnoutrefresh(stdscr);
     doupdate();
     //LAST: std::this_thread::sleep_for(std::chrono::milliseconds(1500));
@@ -442,13 +478,12 @@ int main() {
             std::this_thread::sleep_for(std::chrono::milliseconds(50));
         }
     } while (true);
-    //TODO: continue game story
     endwin();
     return 0;
 }
 
-//this function prints out the *entire* game to the screen
-void printEntireGame(WINDOW* window, Player& plyr, std::vector<std::string>* cMap, bool& delayedPrint) {
+//this function prints out the ENTIRE game to the screen
+void printEntireGame(WINDOW* window, Player& plyr, const std::vector<std::string>* cMap, bool& delayedPrint) {
     for (unsigned int i = 0; i < (*cMap).size(); i++) {
         for (unsigned int j = 0; j < (*cMap)[i].size(); j++) {
             char chr = (*cMap)[i][j];
@@ -529,8 +564,7 @@ void printEntireGame(WINDOW* window, Player& plyr, std::vector<std::string>* cMa
     }
 }
 
-//this function prints the game *visible* to player
-void printFovGame (WINDOW* window, Player& plyr, std::vector<std::string>* cMap, bool& delayedPrint) {
+std::vector<std::string> getfovMap (Player& plyr, const std::vector<std::string>* cMap) {
     std::vector<std::string> fovMap;
     int* pP = plyr.getPos();
     int x = pP[0];
@@ -587,7 +621,16 @@ void printFovGame (WINDOW* window, Player& plyr, std::vector<std::string>* cMap,
         fovMap[x+2][y] = 'v';
         fovMap[x+2][y+1] = 'v';
     }
-    //then print out whatever is visible
+    return fovMap;
+};
+
+//this function prints the game parts *visible* to player
+void printFovGame (WINDOW* window, Player& plyr, const std::vector<std::string>* cMap, bool& delayedPrint) { 
+
+    //get fovMap
+    std::vector<std::string> fovMap = getfovMap(plyr, cMap);
+
+    //then print out whatever is visible in fovMap
     for (unsigned int i = 0; i < (*cMap).size(); i++) {
         for (unsigned int j = 0; j < (*cMap)[i].size(); j++) {
             char chr = (*cMap)[i][j];
@@ -689,17 +732,17 @@ void printInfo(WINDOW* window, Player& plyr) {
     int* pos = plyr.getPos();
 
     wattron(window, COLOR_PAIR(TITLE_PAIR));
-    mvwprintw(window, 1, 1, "Bored Adventurer");    //title
-    wattroff(window, COLOR_PAIR(TITLE_PAIR));
+    mvwprintw(window, 1, 1, name.c_str());          //name
+    wattron(window, COLOR_PAIR(TITLE_PAIR));
+
     wattron(window, COLOR_PAIR(INFO_PAIR));
-    mvwprintw(window, 3, 1, name.c_str());          //name
     std::string temp = std::to_string(health);
-    mvwprintw(window, 4, 1, temp.c_str());          //health
+    mvwprintw(window, 3, 1, temp.c_str());          //health
     wprintw(window, " hp");
     temp = std::to_string(gold);
-    mvwprintw(window, 5, 1, temp.c_str());          //gold
+    mvwprintw(window, 4, 1, temp.c_str());          //gold
     wprintw(window, " g");
-    mvwprintw(window, 6, 1, plyr.getLoc().c_str()); //loc
+    mvwprintw(window, 5, 1, plyr.getLoc().c_str()); //loc
     wprintw(window, ": ");
     temp = std::to_string(pos[0]);                  //pos
     temp.push_back(',');
@@ -755,7 +798,7 @@ void printInv(WINDOW* window, Player& plyr, bool highlight, unsigned short int& 
     }
 }
 
-//get the name of the highlighted item in inventory
+//get the name of the highlighted item in player's inventory
 std::string getHG(WINDOW* window, Player& plyr, unsigned short int& invhgNum) {
     std::map<std::string, unsigned int> inventory = plyr.getInv();
     std::string highlighted;
@@ -769,7 +812,7 @@ std::string getHG(WINDOW* window, Player& plyr, unsigned short int& invhgNum) {
     return highlighted;
 }
 
-//spawn player
+//set player position to the one within the current map
 void spawnPlayer(Player& plyr, std::vector<std::string>& cMap) {
     for (unsigned int i = 0; i < cMap.size(); i++) {
         for (unsigned int j = 0; j < cMap[i].size(); j++) {
@@ -781,32 +824,37 @@ void spawnPlayer(Player& plyr, std::vector<std::string>& cMap) {
 }
 
 //render screen
-void renderScreen(Player& plyr, std::vector<std::string>& currentMap, bool& changedMap, bool& highlight, unsigned short int& invhgNum, WINDOW* stdscr, WINDOW* main, WINDOW* info, WINDOW* log, WINDOW* inv, bool delayedPrint) {
+void renderScreen(Player& plyr, const std::vector<std::string>& currentMap, bool& changedMap, bool& highlight, unsigned short int& invhgNum, WINDOW* stdscr, WINDOW* main, WINDOW* info, WINDOW* log, WINDOW* inv, bool delayedPrint) {
     std::vector<std::string>& logs = plyr.getLogs();
     werase(stdscr);
     werase(main);
     werase(info);
     werase(log);
     werase(inv);
+
+    wattron(main, COLOR_PAIR(GOLD_PAIR));
     wborder(main, L'║', L'║', L'═', L'═', L'╔', L'╗', L'╚', L'╝');
+    wattroff(main, COLOR_PAIR(GOLD_PAIR));
+
     box(info, 0, 0);
     box(log, 0, 0);
     box(inv, 0, 0);
+
+    wnoutrefresh(stdscr);
+    
     printInfo(info, plyr);
     printLog(log, logs);
     printInv(inv, plyr, highlight, invhgNum);
-    wnoutrefresh(main);
-    wnoutrefresh(info);
-    wnoutrefresh(log);
-    wnoutrefresh(inv);
-    doupdate(); 
     printFovGame(main, plyr, &currentMap, delayedPrint);
-    attron(COLOR_PAIR(BOX_PAIR));
+
+    wattron(main, COLOR_PAIR(GOLD_PAIR));
     wborder(main, L'║', L'║', L'═', L'═', L'╔', L'╗', L'╚', L'╝');
+    wattroff(main, COLOR_PAIR(GOLD_PAIR));
+
     box(info, 0, 0);
     box(log, 0, 0);
     box(inv, 0, 0);
-    attroff(COLOR_PAIR(BOX_PAIR));
+
     wnoutrefresh(stdscr);
     wnoutrefresh(main);
     wnoutrefresh(info);
