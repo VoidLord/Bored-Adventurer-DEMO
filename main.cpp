@@ -562,11 +562,11 @@ void printEntireGame(WINDOW* window, Player& plyr, const std::vector<std::string
                 wattron(window, COLOR_PAIR(STAIR_PAIR));
                 mvwaddch(window, i + 1, j + 1, L'▼');
                 wattroff(window, COLOR_PAIR(STAIR_PAIR));
-            } else if (chr == ENEMY) {      //if its enemy
+            } else if (chr == ENEMY) {          //if its enemy
                 wattron(window, COLOR_PAIR(PLAYER_PAIR));
                 mvwaddch(window, i + 1, j + 1, L'ô');
                 wattroff(window, COLOR_PAIR(PLAYER_PAIR));
-            } else if (chr == BOSS) {       //if its boss
+            } else if (chr == BOSS) {           //if its boss
                 wattron(window, COLOR_PAIR(PLAYER_PAIR));
                 mvwaddch(window, i + 1, j + 1, L'☻');
                 wattroff(window, COLOR_PAIR(PLAYER_PAIR));
