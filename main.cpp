@@ -59,7 +59,7 @@ std::vector<std::string> forest = {
     "ttttttttttttwwwwtttt",
     "t@      w      w   t",
     "ttttttt   twww w w t",
-    "t    kttttt   ** t t",
+    "t    *ttttt   ** t t",
     "t*tttttt  *  ttttt t",
     "t     *x* tt   **  t",
     "###ttt ttxtttttttt t",
@@ -133,15 +133,17 @@ int main() {
     init_pair(15, COLOR_WHITE, COLOR_CYAN);     //water
     resize_term(16, 24);
     SetConsoleTitle(TEXT(""));
-    curs_set(0);    //hide the blinking underline
-    keypad(stdscr, true);
-    noecho();   //disable input feedback
-    cbreak();   //idk what this does but according to the PDMANUAL, this enables immediate input instead of buffering
+    curs_set(0);            //hide the blinking underline
+    keypad(stdscr, true);   //enable keypad to be able to use arrows on keyboard
+    noecho();               //disable input feedback
+    cbreak();               //idk what this does but according to the PDMANUAL, this enables immediate input instead of buffering
     unsigned int mmhgNum = 0;
     std::vector<std::string> mmList = {
         "Play game",
         "Exit"
     };
+
+    //main menu loop
     do {
         werase(stdscr);
         wattron(stdscr, COLOR_PAIR(TITLE_PAIR));
@@ -149,12 +151,13 @@ int main() {
         mvwprintw(stdscr, 5, 16, "DEMO");
         wattroff(stdscr, COLOR_PAIR(TITLE_PAIR));
 
+        //show selectable options
         for (unsigned int i = 0; i < mmList.size(); i++) {
 
             wattron(stdscr, COLOR_PAIR(GOLD_PAIR));
 
             if (i == mmhgNum) {
-                mvwprintw(stdscr, 9 + (2*i), 5, ">");
+                mvwprintw(stdscr, 9 + (2*i), 5, ">");   //add the "currently selected" character
                 wattron(stdscr, COLOR_PAIR(HG_PAIR));
             } else {
                 wattron(stdscr, COLOR_PAIR(BOX_PAIR));
@@ -194,9 +197,9 @@ int main() {
             }
         }
     } while (true);
-    keypad(stdscr, false);
-    echo();
-    curs_set(1);
+    keypad(stdscr, false);      //disable keypad during name input
+    echo();                     //return input characters
+    curs_set(1);                //blinking cursor
     char playerName[] = {""};   //NOTE: never forget to initialize a C-style string, even if its meant to be empty
     do {
         werase(stdscr);
@@ -213,6 +216,7 @@ int main() {
 
     Player player(playerName, "start", 100, 0);  //initialize player
     std::vector<std::string>* currentMap = &maps[player.getLoc()];
+
     //initialize the sizes for all windows
     int main_x = currentMap->size() + 2;
     int main_y = (*currentMap)[0].size() + 2;
@@ -223,6 +227,7 @@ int main() {
     int inv_x = main_x + log_x;
     int inv_y = 22;
     resize_term((main_x > info_x ? main_x : info_x) + log_x, main_y + info_y + 3 + inv_y + 1);
+
     //initialize the main windows
     WINDOW* main = newwin(main_x, main_y, 0, 1);
     WINDOW* info = newwin(info_x, info_y, 0, main_y+2);
@@ -230,11 +235,14 @@ int main() {
     WINDOW* inv = newwin(inv_x, inv_y, 0, main_y + info_y+3);
     keypad(stdscr, true);
     noecho();
-    curs_set(0);
+    curs_set(0);        //set cursor to invisible
+
+    //initialize logs array
     std::vector<std::string>& logs = player.getLogs();
     for (unsigned int i = 0; i < 6; i++) {
         logs.push_back("");
     }
+
     resize_term((main_x > info_x ? main_x : info_x) + log_x, main_y + info_y + 3 + inv_y + 1);
     werase(stdscr);
 
@@ -258,16 +266,22 @@ int main() {
     doupdate();
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     getch();
+
     spawnPlayer(player, *currentMap);
+
     int* pPos = player.getPos();
     int mode = 1;   //1=move, 2=inv
     bool highlight = false; //to highlight items in inventory mode
     unsigned short int invhgNum = 0;
     bool changedMap = false;
+
     wnoutrefresh(stdscr);
-    renderScreen(player, *currentMap, changedMap, highlight, invhgNum, stdscr, main, info, log, inv, true);
+    renderScreen(player, *currentMap, changedMap, highlight, invhgNum, stdscr, main, info, log, inv, true);     //render once before the game loop which starts with player input
+
+    //first game loop
     do {
-        input = wgetch(stdscr); //get player input
+        input = wgetch(stdscr);             //get player input
+
         if (mode == 1) {
             if (input == KEY_LEFT) {
                 changedMap = player.movePlayer(*currentMap, pPos[0], pPos[1]-1);
@@ -284,7 +298,7 @@ int main() {
                 resize_term((main_x > info_x ? main_x : info_x) + log_x, main_y + info_y + 3 + inv_y + 1);
                 curs_set(0);
             }
-            if (changedMap == true) {   //if map has changed
+            if (changedMap == true) {       //if map has changed
                 currentMap = &maps[player.getLoc()];
                 int main_x = currentMap->size() + 2;
                 int main_y = (*currentMap)[0].size() + 2;
@@ -302,7 +316,7 @@ int main() {
                 mvwin(inv, 0, main_y + info_y+3);
                 spawnPlayer(player, *currentMap);
             }
-        } else if (mode == 2) {
+        } else if (mode == 2) {             //if in inventory
             if (input == KEY_UP && invhgNum > 0) {
                 invhgNum -= 1;
             } else if (input == KEY_UP && invhgNum == 0) {
@@ -323,8 +337,9 @@ int main() {
 
         renderScreen(player, *currentMap, changedMap, highlight, invhgNum, stdscr, main, info, log, inv, false);
 
+        //set a little delay between input
         if (mode == 1) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            std::this_thread::sleep_for(std::chrono::milliseconds(25));
         } else {
             std::this_thread::sleep_for(std::chrono::milliseconds(50));
         }
@@ -361,10 +376,12 @@ int main() {
     wnoutrefresh(stdscr);
     doupdate();
 
+    //change loc from "start" to "forest" and update screen accordingly
     player.changeLoc("forest");
     currentMap = &maps[player.getLoc()];
     changedMap = true;
     spawnPlayer(player, *currentMap);
+
     main_x = (*currentMap).size() + 2;
     main_y = (*currentMap)[0].size() + 2;
     info_x = (main_x < 8 ? 8 : main_x);
@@ -386,10 +403,11 @@ int main() {
 
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
-    renderScreen(player, *currentMap, changedMap, highlight, invhgNum, stdscr, main, info, log, inv, true);
+    renderScreen(player, *currentMap, changedMap, highlight, invhgNum, stdscr, main, info, log, inv, true);     //render screen once more before player input
 
     do {
-        input = wgetch(stdscr); //get player input
+        input = wgetch(stdscr);             //get player input
+
         if (mode == 1) {
             if (input == KEY_LEFT) {
                 changedMap = player.movePlayer(*currentMap, pPos[0], pPos[1]-1);
@@ -406,7 +424,7 @@ int main() {
                 resize_term((main_x > info_x ? main_x : info_x) + log_x, main_y + info_y + 3 + inv_y + 1);
                 curs_set(0);
             }
-            if (changedMap == true) {   //if map has changed
+            if (changedMap == true) {       //if map has changed
                 currentMap = &maps[player.getLoc()];
                 int main_x = (*currentMap).size() + 2;
                 int main_y = (*currentMap)[0].size() + 2;
@@ -424,7 +442,7 @@ int main() {
                 mvwin(inv, 0, main_y + info_y+3);
                 spawnPlayer(player, *currentMap);
             }
-        } else if (mode == 2) {
+        } else if (mode == 2) {             //if in inventory
             if (input == KEY_UP && invhgNum > 0) {
                 invhgNum -= 1;
             } else if (input == KEY_UP && invhgNum == 0) {
@@ -447,8 +465,9 @@ int main() {
 
         renderScreen(player, *currentMap, changedMap, highlight, invhgNum, stdscr, main, info, log, inv, false);
 
+        //set a little delay between input
         if (mode == 1) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            std::this_thread::sleep_for(std::chrono::milliseconds(25));
         } else {
             std::this_thread::sleep_for(std::chrono::milliseconds(50));
         }
@@ -465,24 +484,24 @@ int main() {
     wnoutrefresh(stdscr);
     doupdate();
     std::this_thread::sleep_for(std::chrono::milliseconds(1500));
-    mvprintw(4, 32, "THE END");
+    mvprintw(4, 31, "THE END");
     wnoutrefresh(stdscr);
     doupdate();
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    mvprintw(8, 28, "Created by voidl_rd");
+    mvprintw(8, 25, "Created by VoidL_rd");
     wnoutrefresh(stdscr);
     doupdate();
     std::this_thread::sleep_for(std::chrono::milliseconds(2500));
-    mvprintw(15, 19, "Press any key to close game");
+    mvprintw(16, 19, "Press any key to close game");
     wnoutrefresh(stdscr);
     doupdate();
     getch();
 
-    endwin();
+    endwin();   //correctly end the curses window
     return 0;
 }
 
-//this function prints out the ENTIRE game to the screen
+//this function prints out the *ENTIRE* game to the screen
 void printEntireGame(WINDOW* window, Player& plyr, const std::vector<std::string>* cMap, bool& delayedPrint) {
     for (unsigned int i = 0; i < (*cMap).size(); i++) {
         for (unsigned int j = 0; j < (*cMap)[i].size(); j++) {
@@ -564,6 +583,7 @@ void printEntireGame(WINDOW* window, Player& plyr, const std::vector<std::string
     }
 }
 
+//return FOV of current map
 std::vector<std::string> getfovMap (Player& plyr, const std::vector<std::string>* cMap) {
     std::vector<std::string> fovMap;
     int* pP = plyr.getPos();
@@ -624,7 +644,7 @@ std::vector<std::string> getfovMap (Player& plyr, const std::vector<std::string>
     return fovMap;
 };
 
-//this function prints the game parts *visible* to player
+//this function prints the game parts *VISIBLE* to player
 void printFovGame (WINDOW* window, Player& plyr, const std::vector<std::string>* cMap, bool& delayedPrint) { 
 
     //get fovMap
@@ -644,7 +664,7 @@ void printFovGame (WINDOW* window, Player& plyr, const std::vector<std::string>*
 
             if (visible == true || chr == PLAYER) {
                 if (chr == PLAYER) {
-                    if (plyr.getHealth() == 0) {
+                    if (plyr.getHealth() == 0) {    //if player is dead
                         wattron(window, COLOR_PAIR(DEAD_PAIR));
                         mvwaddch(window, i + 1, j + 1, chr);
                         wattroff(window, COLOR_PAIR(DEAD_PAIR));
@@ -653,68 +673,68 @@ void printFovGame (WINDOW* window, Player& plyr, const std::vector<std::string>*
                         mvwaddch(window, i + 1, j + 1, chr);
                         wattroff(window, COLOR_PAIR(PLAYER_PAIR));
                     }
-                } else if (chr == EMPTY) {      //if its empty space
+                } else if (chr == EMPTY) {          //if its empty space
                     wattron(window, COLOR_PAIR(EMPTY_PAIR));
                     mvwaddch(window, i + 1, j + 1, ' ');
                     wattroff(window, COLOR_PAIR(EMPTY_PAIR));
-                } else if (chr == WALL) {       //if its a wall
+                } else if (chr == WALL) {           //if its a wall
                     wattron(window, COLOR_PAIR(WALL_PAIR));
                     mvwaddch(window, i + 1, j + 1, L'▒');
                     wattroff(window, COLOR_PAIR(WALL_PAIR));
-                } else if (chr == TREE) {       //if its a tree
+                } else if (chr == TREE) {           //if its a tree
                     wattron(window, A_DIM);
                     wattron(window, COLOR_PAIR(TREE_PAIR));
                     mvwaddch(window, i + 1, j + 1, L'♣');
                     wattroff(window, COLOR_PAIR(TREE_PAIR));
                     wattroff(window, A_DIM);
-                } else if (chr == WATER) {      //if its water
+                } else if (chr == WATER) {          //if its water
                     wattron(window, COLOR_PAIR(WATER_PAIR));
                     mvwaddch(window, i + 1, j + 1, L'≈');
                     wattroff(window, COLOR_PAIR(WATER_PAIR));
-                } else if (chr == IGOLD) {      //if its item gold
+                } else if (chr == IGOLD) {          //if its item gold
                     wattron(window, COLOR_PAIR(GOLD_PAIR));
                     mvwaddch(window, i + 1, j + 1, L'©');
                     wattroff(window, COLOR_PAIR(GOLD_PAIR));
-                } else if (chr == KEY) {        //if its item gold
+                } else if (chr == KEY) {            //if its item gold
                     wattron(window, COLOR_PAIR(KEY_PAIR));
                     mvwaddch(window, i + 1, j + 1, L'⌐');
                     wattroff(window, COLOR_PAIR(KEY_PAIR));
-                } else if (chr == CHEST) {      //if its item gold
+                } else if (chr == CHEST) {          //if its item gold
                     wattron(window, COLOR_PAIR(CHEST_PAIR));
                     mvwaddch(window, i + 1, j + 1, L'□');
                     wattroff(window, COLOR_PAIR(CHEST_PAIR));
-                } else if (chr == H_TRAP) {     //if its a hidden trap
+                } else if (chr == H_TRAP) {         //if its a hidden trap
                     wattron(window, COLOR_PAIR(EMPTY_PAIR));
                     mvwaddch(window, i + 1, j + 1, ' ');
                     wattroff(window, COLOR_PAIR(EMPTY_PAIR));
-                } else if (chr == V_TRAP) {     //if its a visible trap
+                } else if (chr == V_TRAP) {         //if its a visible trap
                     wattron(window, COLOR_PAIR(TRAP_PAIR));
                     mvwaddch(window, i + 1, j + 1, L'×');
                     wattroff(window, COLOR_PAIR(TRAP_PAIR));
-                } else if (chr == U_STAIR) {    //if its up-stairs
+                } else if (chr == U_STAIR) {        //if its up-stairs
                     wattron(window, COLOR_PAIR(STAIR_PAIR));
                     mvwaddch(window, i + 1, j + 1, L'▲');
                     wattroff(window, COLOR_PAIR(STAIR_PAIR));
-                } else if (chr == D_STAIR) {    //if its down-stairs
+                } else if (chr == D_STAIR) {        //if its down-stairs
                     wattron(window, COLOR_PAIR(STAIR_PAIR));
                     mvwaddch(window, i + 1, j + 1, L'▼');
                     wattroff(window, COLOR_PAIR(STAIR_PAIR));
-                } else if (chr == ENEMY) {      //if its enemy
+                } else if (chr == ENEMY) {          //if its enemy
                     wattron(window, COLOR_PAIR(PLAYER_PAIR));
                     mvwaddch(window, i + 1, j + 1, L'ô');
                     wattroff(window, COLOR_PAIR(PLAYER_PAIR));
-                } else if (chr == BOSS) {       //if its boss
+                } else if (chr == BOSS) {           //if its boss
                     wattron(window, COLOR_PAIR(PLAYER_PAIR));
                     mvwaddch(window, i + 1, j + 1, L'☻');
                     wattroff(window, COLOR_PAIR(PLAYER_PAIR));
-                } else {                        //if unknown
+                } else {                            //if unknown just print it in black and white
                     mvwaddch(window, i + 1, j + 1, chr);
                 }
                 continue;
             } else {
                 mvwaddch(window, i + 1, j + 1, EMPTY);
             }
-            if (delayedPrint == true) {         //delayed print for animated map loading
+            if (delayedPrint == true) {             //delayed print for animated map loading
                 Sleep(10);
                 wnoutrefresh(window);
                 doupdate();
@@ -770,30 +790,36 @@ void addLog(std::vector<std::string>& logs, std::string message) {
 //print stuff to inventory window
 void printInv(WINDOW* window, Player& plyr, bool highlight, unsigned short int& invhgNum) {
     std::map<std::string, unsigned int> inventory = plyr.getInv();
-    std::vector<std::string> v;
     unsigned int i = 0;
+
+    //iterate through player's inventory
     for(std::map<std::string, unsigned int>::iterator it = inventory.begin(); it != inventory.end(); it++) {
-        v.push_back(it->first);
-        int temp = it->second;
-        if (temp <= 0) {
+        int amount = it->second;    //get amount of the item
+
+        if (amount <= 0) {
             continue;
         }
-        if (i == invhgNum && highlight == true) {
+
+        if (i == invhgNum && highlight == true) {       //if its being highlighted
             wattron(window, COLOR_PAIR(HG_PAIR));
         } else {
             wattron(window, COLOR_PAIR(BOX_PAIR));
         }
+
         mvwprintw(window, i+1, 1, (it->first).c_str());
         wprintw(window, ": ");
-        wprintw(window, (std::to_string(temp)).c_str());
-        if (plyr.getWeapon() == it->first) {
+        wprintw(window, (std::to_string(amount)).c_str());
+
+        if (plyr.getWeapon() == it->first) {            //if its equipped
             wprintw(window, " [e]");
         }
+
         if (i == invhgNum && highlight == true) {
             wattroff(window, COLOR_PAIR(HG_PAIR));
         } else {
             wattroff(window, COLOR_PAIR(BOX_PAIR));
         }
+
         i++;
     }
 }
@@ -803,12 +829,16 @@ std::string getHG(WINDOW* window, Player& plyr, unsigned short int& invhgNum) {
     std::map<std::string, unsigned int> inventory = plyr.getInv();
     std::string highlighted;
     unsigned int i = 0;
+
+    //iterate through player's inventory
     for(std::map<std::string, unsigned int>::iterator it = inventory.begin(); it != inventory.end(); it++) {
         if (i == invhgNum) {
             highlighted = it->first;
         }
+
         i++;
     }
+
     return highlighted;
 }
 
@@ -863,7 +893,7 @@ void renderScreen(Player& plyr, const std::vector<std::string>& currentMap, bool
     doupdate();
 }
 
-//move enemy
+//move enemies in current map
 void moveEnemy(std::vector<std::string>& cMap, Player& plyr) {
     int x = 0;
     int y = 0;
@@ -956,3 +986,5 @@ void moveEnemy(std::vector<std::string>& cMap, Player& plyr) {
         }
     }
 }
+
+//hello

@@ -13,15 +13,15 @@ bool Player::movePlayer(std::vector<std::string>& cMap, int x, int y) {
     static int num = 0;
     if (cMap[pPos[0]][pPos[1]] == '@' && m_health != 0) {
         if (cMap[x][y] != '#' && cMap[x][y] != 't' && cMap[x][y] != 'w' && cMap[x][y] != 'c' && cMap[x][y] != 'X' && cMap[x][y] != 'x' && cMap[x][y] != '^' && cMap[x][y] != 'v' && cMap[x][y] != '>' && cMap[x][y] != 'b' && cMap[x][y] != 'e') {
-            if (cMap[x][y] == '*') {            //if step on gold
+            if (cMap[x][y] == '*') {                        //if step on gold
                 this->giveGold(1);
-            } else if (cMap[x][y] == 'k') {     //if step on key
+            } else if (cMap[x][y] == 'k') {                 //if step on key
                 this->giveItem("Key", 1);
             }
             cMap[pPos[0]][pPos[1]] = ' ';
             cMap[x][y] = '@';
             this->setPos(x, y);
-        } else if (cMap[x][y] == 'c') {         //if step on chest
+        } else if (cMap[x][y] == 'c') {                     //if step on chest
             if (m_inventory.find("Key") != m_inventory.end()) {
                 this->delItem("Key", 1, false);
                 this->addLog(m_name + " used a Key");
@@ -40,7 +40,7 @@ bool Player::movePlayer(std::vector<std::string>& cMap, int x, int y) {
                         this->giveGold((rand() % 30 + 25));
                     }
                 } else {
-                    this->giveGold((rand() % 20 + 20)); //random number between 20-40
+                    this->giveGold((rand() % 20 + 20));     //random number between 20-40
                 }
                 cMap[x][y] = ' ';
             }
@@ -48,9 +48,7 @@ bool Player::movePlayer(std::vector<std::string>& cMap, int x, int y) {
             if (this->m_equippedWeapon == "Iron_Sword") {
                 cMap[x][y] = ' ';
                 this->Damage((rand() % 3 + 2));
-                if (this->m_currentMap == "dungeon") {
-                    this->giveItem("Key", 1);
-                }
+                this->giveItem("Key", 1);
             }
         } else if (cMap[x][y] == 'x') {         //if step on trap
             this->Damage(15);
