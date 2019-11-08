@@ -45,35 +45,6 @@
 #define TREE_PAIR   14
 #define WATER_PAIR  15
 
-std::vector<std::string> test1 = {
-    "######wwwwwwww",
-    "#@   ******  w",
-    "#            w",
-    "#     #    k #",
-    "#  ^  #      #",
-    "#     #    c #",
-    "##############"
-};
-
-std::vector<std::string> test2 = {
-    "#########",
-    "#x  XXXX#",
-    "#x      #",
-    "#x  @v  #",
-    "#x      #",
-    "#########"
-};
-
-std::vector<std::string> test3 = {
-    "###################",
-    "#                 #",
-    "#    #   ##########",
-    "# @  #   #     e  #",
-    "#    #   #        #",
-    "#    #            #",
-    "###################"
-};
-
 std::vector<std::string> start = {
     "tttttwwwwwwttttttttt",
     "t@t   cwtt  *t * t t",
@@ -88,36 +59,34 @@ std::vector<std::string> forest = {
     "ttttttttttttwwwwtttt",
     "t@      w      w   t",
     "ttttttt   twww w w t",
-    "t    ktttttx  ** t t",
+    "t    kttttt   ** t t",
     "t*tttttt  *  ttttt t",
-    "t     *t* tt   **  t",
+    "t     *x* tt   **  t",
     "###ttt ttxtttttttt t",
     "#v#* t *     t*    t",
-    "# #t t ttttt   xtttt",
-    "#    *  tttttt  tctt",
-    "##ttttx  *     *   t",
+    "# #t t ttttte  xtttt",
+    "# e  *  tttttt  tctt",
+    "##tttt   *     *   t",
     "tttttttttttttttttttt"
 };
 
 std::vector<std::string> dungeon = {
     "#####################",
     "#    *xx#ccc#xx*    #",
-    "# #       b       # #",
+    "# #       e       # #",
     "#*#  x#       #x  #*#",
-    "#*#               #*#",
-    "# ##x           x## #",
-    "#         x         #",
+    "#*#      ###   e  #*#",
+    "# ##x    x#x    x## #",
+    "#     e             #",
     "#x  #############  x#",
     "###   *       *   ###",
     "#^######## ##########",
-    "#@               * *#",
+    "#@          e    * *#",
     "#####################"
 };
 
 //map
 std::map<std::string, std::vector<std::string>> maps{
-    {"test1", test1},
-    {"test2", test2},
     {"start", start},
     {"forest", forest},
     {"dungeon", dungeon}
@@ -134,6 +103,7 @@ std::string getHG(WINDOW* window, Player& plyr, unsigned short int& invhgNum);
 void addLog(std::vector<std::string>& log, std::string message);
 void spawnPlayer(Player& plyr, std::vector<std::string>& cMap);
 void renderScreen(Player& plyr, const std::vector<std::string>& currentMap, bool& changedMap, bool& highlight, unsigned short int& invhgNum, WINDOW* stdscr, WINDOW* main, WINDOW* info, WINDOW* log, WINDOW* inv, bool delayedPrint);
+void moveEnemy(std::vector<std::string>& cMap, Player& plyr);
 
 //here comes the fun part
 int main() {
@@ -176,6 +146,7 @@ int main() {
         werase(stdscr);
         wattron(stdscr, COLOR_PAIR(TITLE_PAIR));
         mvwprintw(stdscr, 4, 4, "Bored Adventurer");
+        mvwprintw(stdscr, 5, 16, "DEMO");
         wattroff(stdscr, COLOR_PAIR(TITLE_PAIR));
 
         for (unsigned int i = 0; i < mmList.size(); i++) {
@@ -273,18 +244,19 @@ int main() {
 
     wnoutrefresh(stdscr);
     doupdate();
-    //LAST: std::this_thread::sleep_for(std::chrono::milliseconds(1500));
-    mvprintw(3, 5, "One day our adventurer got bored and");
-    mvprintw(4, 8, "decided to go into the woods...");
+    std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+    mvprintw(3, 11, "One day our adventurer got bored and");
+    mvprintw(4, 14, "decided to go into the woods...");
     wnoutrefresh(stdscr);
     doupdate();
-    //LAST: std::this_thread::sleep_for(std::chrono::milliseconds(2500));
-    mvprintw(7, 7, "when he suddenly found a mysterious chest");
+    std::this_thread::sleep_for(std::chrono::milliseconds(2500));
+    mvprintw(7, 13, "when he suddenly found a mysterious chest");
     wnoutrefresh(stdscr);
     doupdate();
-    //LAST: std::this_thread::sleep_for(std::chrono::milliseconds(2500));
-    mvprintw(12, 13, "Press any key to continue");
+    std::this_thread::sleep_for(std::chrono::milliseconds(2500));
+    mvprintw(13, 19, "Press any key to continue");
     doupdate();
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     getch();
     spawnPlayer(player, *currentMap);
     int* pPos = player.getPos();
@@ -369,19 +341,20 @@ int main() {
 
     wnoutrefresh(stdscr);
     doupdate();
-    //LAST: std::this_thread::sleep_for(std::chrono::milliseconds(1500));
-    mvprintw(3, 9, "He found a sword");
-    mvprintw(4, 13, "with weird shining symbols on it");
+    std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+    mvprintw(3, 11, "He found a sword");
+    mvprintw(4, 15, "with weird shining symbols on it");
     wnoutrefresh(stdscr);
     doupdate();
-    //LAST: std::this_thread::sleep_for(std::chrono::milliseconds(2500));
-    mvprintw(7, 12, "he then decided to go home.");
+    std::this_thread::sleep_for(std::chrono::milliseconds(2500));
+    mvprintw(7, 13, "he then decided to go home.");
     wnoutrefresh(stdscr);
     doupdate();
-    //LAST: std::this_thread::sleep_for(std::chrono::milliseconds(2500));
-    mvprintw(12, 16, "Press any key to continue");
+    std::this_thread::sleep_for(std::chrono::milliseconds(2500));
+    mvprintw(13, 19, "Press any key to continue");
     wnoutrefresh(stdscr);
     doupdate();
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     getch();
 
     werase(stdscr);
@@ -411,7 +384,7 @@ int main() {
     wnoutrefresh(main);
     doupdate();
 
-    //LAST: std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
     renderScreen(player, *currentMap, changedMap, highlight, invhgNum, stdscr, main, info, log, inv, true);
 
@@ -470,6 +443,8 @@ int main() {
             }
         }
         
+        moveEnemy(*currentMap, player);
+
         renderScreen(player, *currentMap, changedMap, highlight, invhgNum, stdscr, main, info, log, inv, false);
 
         if (mode == 1) {
@@ -477,7 +452,32 @@ int main() {
         } else {
             std::this_thread::sleep_for(std::chrono::milliseconds(50));
         }
-    } while (true);
+    } while (!player.hasItem("Golden Amulet"));     //set a requirement for the end
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    werase(stdscr);
+
+    wattron(stdscr, COLOR_PAIR(TITLE_PAIR));
+    box(stdscr, 0, 0);
+    wattroff(stdscr, COLOR_PAIR(TITLE_PAIR));
+
+    wnoutrefresh(stdscr);
+    doupdate();
+    std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+    mvprintw(4, 32, "THE END");
+    wnoutrefresh(stdscr);
+    doupdate();
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    mvprintw(8, 28, "Created by voidl_rd");
+    wnoutrefresh(stdscr);
+    doupdate();
+    std::this_thread::sleep_for(std::chrono::milliseconds(2500));
+    mvprintw(15, 19, "Press any key to close game");
+    wnoutrefresh(stdscr);
+    doupdate();
+    getch();
+
     endwin();
     return 0;
 }
@@ -861,4 +861,98 @@ void renderScreen(Player& plyr, const std::vector<std::string>& currentMap, bool
     wnoutrefresh(log);
     wnoutrefresh(inv);
     doupdate();
+}
+
+//move enemy
+void moveEnemy(std::vector<std::string>& cMap, Player& plyr) {
+    int x = 0;
+    int y = 0;
+
+    for (unsigned int i = 0; i < cMap.size(); i++) {
+        for (unsigned int j = 0; j < cMap[i].size(); j++) {
+            if (cMap[i][j] == ENEMY) {
+                x = i;
+                y = j;
+                
+                //check around itself and attack
+                if (cMap[x-1][y] == PLAYER) {               //top
+                    plyr.Damage(rand() % 6 + 8);
+                    break;
+                } else if (cMap[x][y-1] == PLAYER) {        //left
+                    plyr.Damage(rand() % 6 + 8);
+                    break;
+                } else if (cMap[x][y+1] == PLAYER) {        //right
+                    plyr.Damage(rand() % 6 + 8);
+                    break;
+                } else if (cMap[x+1][y] == PLAYER) {        //bottom
+                    plyr.Damage(rand() % 6 + 8);
+                    break;
+                }
+
+                //check vertically and horizontally
+                if (cMap[x-1][y] != WALL && cMap[x-1][y] != TREE && cMap[x-1][y] != CHEST && cMap[x-1][y] != KEY && x != 1) {                   //top
+                    if (cMap[x-2][y] == PLAYER) {
+                        cMap[x-1][y] = ENEMY;
+                        cMap[x][y] = EMPTY;
+                    }
+                }
+                if (cMap[x][y-1] != WALL && cMap[x][y-1] != TREE && cMap[x][y-1] != CHEST && cMap[x][y-1] != KEY && y != 1) {                   //left
+                    if (cMap[x][y-2] == PLAYER) {
+                        cMap[x][y-1] = ENEMY;
+                        cMap[x][y] = EMPTY;
+                    }
+                }
+                if (cMap[x][y+1] != WALL && cMap[x][y+1] != TREE && cMap[x][y+1] != CHEST && cMap[x][y+1] != KEY && y != cMap[0].size()-2) {    //right
+                    if (cMap[x][y+2] == PLAYER) {
+                        cMap[x][y+1] = ENEMY;
+                        cMap[x][y] = EMPTY;
+                    }
+                }
+                if (cMap[x+1][y] != WALL && cMap[x+1][y] != TREE && cMap[x+1][y] != CHEST && cMap[x+1][y] != KEY && x != cMap.size()-2) {       //bottom
+                    if (cMap[x+2][y] == PLAYER) {
+                        cMap[x+1][y] = ENEMY;
+                        cMap[x][y] = EMPTY;
+                    }
+                }
+
+                //check diagonally
+                if (cMap[x-1][y-1] == PLAYER) {                                                                                         //top left
+                    if (cMap[x][y-1] != WALL && cMap[x][y-1] != TREE && cMap[x][y-1] != CHEST && cMap[x][y-1] != KEY && x != 1) {               //left
+                        cMap[x][y-1] = ENEMY;
+                        cMap[x][y] = EMPTY;
+                    } else if (cMap[x-1][y] != WALL && cMap[x-1][y] != TREE && cMap[x-1][y] != CHEST && cMap[x-1][y] != KEY && x != 1) {        //top
+                        cMap[x-1][y] = ENEMY;
+                        cMap[x][y] = EMPTY;
+                    }
+                }
+                if (cMap[x-1][y+1] == PLAYER) {                                                                                         //top right
+                    if (cMap[x][y+1] != WALL && cMap[x][y+1] != TREE && cMap[x][y+1] != CHEST && cMap[x][y+1] != KEY && x != 1) {               //right
+                        cMap[x][y+1] = ENEMY;
+                        cMap[x][y] = EMPTY;
+                    } else if (cMap[x-1][y] != WALL && cMap[x-1][y] != TREE && cMap[x-1][y] != CHEST && cMap[x-1][y] != KEY && x != 1) {        //top
+                        cMap[x-1][y] = ENEMY;
+                        cMap[x][y] = EMPTY;
+                    }
+                }
+                if (cMap[x+1][y-1] == PLAYER) {                                                                                         //bottom left
+                    if (cMap[x][y-1] != WALL && cMap[x][y-1] != TREE && cMap[x][y-1] != CHEST && cMap[x][y-1] != KEY && x != 1) {               //left
+                        cMap[x][y-1] = ENEMY;
+                        cMap[x][y] = EMPTY;
+                    } else if (cMap[x+1][y] != WALL && cMap[x+1][y] != TREE && cMap[x+1][y] != CHEST && cMap[x+1][y] != KEY && x != 1) {        //bottom
+                        cMap[x+1][y] = ENEMY;
+                        cMap[x][y] = EMPTY;
+                    }
+                }                                                                                                                       //bottom right
+                if (cMap[x+1][y+1] == PLAYER) {
+                    if (cMap[x][y+1] != WALL && cMap[x][y+1] != TREE && cMap[x][y+1] != CHEST && cMap[x][y+1] != KEY && x != 1) {               //right
+                        cMap[x][y+1] = ENEMY;
+                        cMap[x][y] = EMPTY;
+                    } else if (cMap[x+1][y] != WALL && cMap[x+1][y] != TREE && cMap[x+1][y] != CHEST && cMap[x+1][y] != KEY && x != 1) {        //bottom
+                        cMap[x+1][y] = ENEMY;
+                        cMap[x][y] = EMPTY;
+                    }
+                }
+            }
+        }
+    }
 }

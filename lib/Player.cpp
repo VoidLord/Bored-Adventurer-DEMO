@@ -10,6 +10,7 @@ m_gold(gold)
 
 bool Player::movePlayer(std::vector<std::string>& cMap, int x, int y) {
     int* pPos = this->getPos();
+    static int num = 0;
     if (cMap[pPos[0]][pPos[1]] == '@' && m_health != 0) {
         if (cMap[x][y] != '#' && cMap[x][y] != 't' && cMap[x][y] != 'w' && cMap[x][y] != 'c' && cMap[x][y] != 'X' && cMap[x][y] != 'x' && cMap[x][y] != '^' && cMap[x][y] != 'v' && cMap[x][y] != '>' && cMap[x][y] != 'b' && cMap[x][y] != 'e') {
             if (cMap[x][y] == '*') {            //if step on gold
@@ -25,16 +26,31 @@ bool Player::movePlayer(std::vector<std::string>& cMap, int x, int y) {
                 this->delItem("Key", 1, false);
                 this->addLog(m_name + " used a Key");
                 if (m_currentMap == "start") {
-                    this->giveItem("Iron_Sword", 1);
                     this->giveItem("Health_Potion", 2);
+                    this->giveItem("Iron_Sword", 1);
                     this->addLog("Equip your new sword to continue");
                 } else if (m_currentMap == "forest") {
                     this->giveItem("Health_Potion", 4);
                     this->giveGold((rand() % 30 + 25));
+                } else if (m_currentMap == "dungeon") {
+                    num++;
+                    if (!this->hasItem("Golden Amulet") && num == 3) {
+                        this->giveItem("Golden Amulet", 1);
+                    } else {
+                        this->giveGold((rand() % 30 + 25));
+                    }
                 } else {
                     this->giveGold((rand() % 20 + 20)); //random number between 20-40
                 }
                 cMap[x][y] = ' ';
+            }
+        } else if (cMap[x][y] == 'e') {
+            if (this->m_equippedWeapon == "Iron_Sword") {
+                cMap[x][y] = ' ';
+                this->Damage((rand() % 3 + 2));
+                if (this->m_currentMap == "dungeon") {
+                    this->giveItem("Key", 1);
+                }
             }
         } else if (cMap[x][y] == 'x') {         //if step on trap
             this->Damage(15);
@@ -53,9 +69,10 @@ bool Player::movePlayer(std::vector<std::string>& cMap, int x, int y) {
                 return true;
             } else if (m_currentMap == "forest") {
                 this->changeLoc("dungeon");
+                this->addLog("Note: Open all three chests.");
                 return true;
             }
-        } 
+        }
     }
     return false;
 }
@@ -90,6 +107,7 @@ void Player::Damage(int amount) {
         this->addLog(m_name + " died");
     } else {
         m_health -= amount;
+        this->addLog(m_name + " got " + std::to_string(amount) + " dmg");
     }
 }
 
