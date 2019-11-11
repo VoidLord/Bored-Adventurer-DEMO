@@ -9,6 +9,6 @@ Move: ARROWS
 
 Inventory: I
 
-Equip: E
+Equip/Use: E
 
 Delete item: D
