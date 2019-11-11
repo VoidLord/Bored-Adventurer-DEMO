@@ -10,3 +10,5 @@ Move: ARROWS
 Inventory: I
 
 Equip: E
+
+Delete item: D
