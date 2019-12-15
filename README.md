@@ -12,3 +12,5 @@ Inventory: I
 Equip/Use: E
 
 Delete item: D
+
+Code Quality: **Colossal Catastrophe, but working**
