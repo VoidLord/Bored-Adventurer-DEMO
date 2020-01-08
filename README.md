@@ -1,7 +1,7 @@
 # Bored-Adventurer-DEMO
-This is a short console ASCII turn-based roguelite game I've made to practice the fundamentals of C/C++, and also how to use PDCurses, a terminal manipulation library.
+This is a short console ASCII turn-based roguelite game I've made to practice the fundamentals of C/C++, and to learn to use PDCurses, a terminal manipulation library.
 
-I making it open source under MIT so anyone can use it to learn C/C++, or the PDCurses library.
+I'm making it open source under MIT so anyone can use it to learn the really basics of C/C++, or the PDCurses library.
 
 # Controls:
 
@@ -12,5 +12,7 @@ Inventory: I
 Equip/Use: E
 
 Delete item: D
+
+
 
 > Code Quality: **Colossal Catastrophe, but working**
